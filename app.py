@@ -4,6 +4,8 @@ from datetime import datetime
 import os
 import pytz
 from docx import Document
+from docx.shared import Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from io import BytesIO
 
 # ===== 1. НАСТРОЙКИ СТРАНИЦЫ =====
@@ -34,18 +36,46 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 3. ГЕНЕРАЦИЯ WORD =====
+# ===== 3. ГЕНЕРАЦИЯ WORD (УЛУЧШЕННЫЙ ШАБЛОН) =====
 def create_docx(doc_type, data):
     doc = Document()
-    doc.add_heading(doc_type, 0)
-    for key, value in data.items():
-        p = doc.add_paragraph()
-        p.add_run(f"{key}: ").bold = True
-        p.add_run(str(value))
     
-    doc.add_paragraph(f"\nДата создания: {datetime.now().strftime('%d.%m.%Y')}")
-    doc.add_paragraph("\nПодпись Стороны 1: __________          Подпись Стороны 2: __________")
+    # Заголовок документа
+    heading = doc.add_heading(doc_type.upper(), 1)
+    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
+    # Дата и город
+    date_p = doc.add_paragraph()
+    date_p.add_run(f"г. Астана\t\t\t\t\t\t\t\t{datetime.now().strftime('%d.%m.%Y')} г.")
+    
+    # Преамбула (вступление)
+    p = doc.add_paragraph()
+    p.add_run(f"\n{data.get('Сторона 1', '__________')} (далее - Сторона 1), ")
+    p.add_run("с одной стороны, и ")
+    p.add_run(f"{data.get('Сторона 2', '__________')} (далее - Сторона 2), ")
+    p.add_run("с другой стороны, совместно именуемые «Стороны», заключили настоящий договор о нижеследующем:\n")
+    
+    # Основные пункты
+    doc.add_heading('1. ПРЕДМЕТ ДОГОВОРА', level=2)
+    doc.add_paragraph(f"1.1. По настоящему договору Стороны договорились о следующем: {data.get('Детали', '____________________')}.")
+    
+    doc.add_heading('2. УСЛОВИЯ И ПОРЯДОК РАСЧЕТОВ', level=2)
+    doc.add_paragraph(f"2.1. Основные условия сделки: {data.get('Условия', '____________________')}.")
+    doc.add_paragraph(f"2.2. Сроки исполнения обязательств: {data.get('Сроки', '____________________')}.")
+    
+    doc.add_heading('3. ОТВЕТСТВЕННОСТЬ СТОРОН', level=2)
+    doc.add_paragraph("3.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору Стороны несут ответственность в соответствии с действующим законодательством Республики Казахстан.")
+    
+    # Реквизиты
+    doc.add_heading('4. АДРЕСА И РЕКВИЗИТЫ СТОРОН', level=2)
+    req_p = doc.add_paragraph(f"{data.get('Реквизиты', '____________________')}\n")
+    
+    # Подписи
+    sign_p = doc.add_paragraph()
+    sign_p.add_run("\nПОДПИСИ СТОРОН:\n").bold = True
+    sign_p.add_run("От Стороны 1: ___________________        От Стороны 2: ___________________")
+    
+    # Сохранение в буфер
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -67,14 +97,13 @@ with st.sidebar:
 
 if st.session_state.page == "Главная":
     st.markdown("<div class='main-title'>EasyDoc AI</div>", unsafe_allow_html=True)
-    st.markdown("<div class='main-sub'>Ядро автоматизации корпоративных документов.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='main-sub'>Ваш надежный ИИ-помощник для малого бизнеса.</div>", unsafe_allow_html=True)
     if os.path.exists("logo.png"): st.image("logo.png", use_container_width=True)
     st.divider()
     col_l, col_m, col_r = st.columns([1,2,1])
-    if col_m.button("🚀 ЗАПУСТИТЬ ГЕНЕРАТОР", use_container_width=True): nav_to("Генератор")
+    if col_m.button("ЗАПУСТИТЬ ГЕНЕРАТОР", use_container_width=True): nav_to("Генератор")
 
 elif st.session_state.page == "Генератор":
-    # ФОТО В ГЕНЕРАТОРЕ
     if os.path.exists("logo_pen.png"): 
         st.markdown('<img src="logo_pen.png" class="gen-logo">', unsafe_allow_html=True)
     
@@ -90,31 +119,30 @@ elif st.session_state.page == "Генератор":
     with st.form("main_form"):
         st.subheader("Информация о сторонах")
         c1, c2 = st.columns(2)
-        org_name = c1.text_input("Организация / Продавец (Наименование, БИН)")
-        client_name = c2.text_input("ФИО Клиента / Покупателя (ИИН)")
+        org_name = c1.text_input("Сторона 1 (Организация/Продавец/Работодатель + БИН)")
+        client_name = c2.text_input("Сторона 2 (ФИО Клиента/Покупателя/Работника + ИИН)")
         
         st.subheader("Детали сделки")
         col3, col4 = st.columns(2)
         
-        # Динамические вопросы под шаблоны
         if "Трудовой" in doc_choice:
             d1 = col3.text_input("Должность работника")
             d2 = col4.text_input("Оклад (цифрами и прописью)")
-            d3 = st.text_input("Срок действия договора")
+            d3 = st.text_input("Срок действия договора (например: 1 год)")
         elif "аренды" in doc_choice:
-            d1 = col3.text_input("Адрес объекта аренды")
-            d2 = col4.text_input("Ежемесячная плата")
-            d3 = st.text_input("Целевое назначение (жилое/офис)")
+            d1 = col3.text_input("Точный адрес объекта аренды")
+            d2 = col4.text_input("Ежемесячная арендная плата")
+            d3 = st.text_input("Срок аренды и целевое назначение (жилое/офис)")
         elif "ТС (Авто)" in doc_choice:
             d1 = col3.text_input("Марка, Модель, Год выпуска")
-            d2 = col4.text_input("Гос. номер и VIN код")
-            d3 = st.text_input("Цена автомобиля")
+            d2 = col4.text_input("Цена автомобиля")
+            d3 = st.text_input("Гос. номер и VIN код")
         else:
-            d1 = col3.text_input("Предмет договора (что именно)")
+            d1 = col3.text_input("Точный предмет договора (описание)")
             d2 = col4.text_input("Сумма договора")
             d3 = st.text_input("Сроки выполнения/поставки")
 
-        address = st.text_area("Юридические адреса и реквизиты сторон")
+        address = st.text_area("Юридические адреса, контакты и банковские реквизиты сторон (IBAN, Банк)")
         submitted = st.form_submit_button("СОЗДАТЬ ДОКУМЕНТ")
 
     if submitted:
@@ -130,29 +158,43 @@ elif st.session_state.page == "Генератор":
                     k1.write(f"**Жұмыс беруші:** {org_name}\n\n**Жұмыскер:** {client_name}\n\nЛауазымы: {d1}")
                     k2.write(f"**Работодатель:** {org_name}\n\n**Работник:** {client_name}\n\nДолжность: {d1}")
                     st.write(f"**Жалақы / Оклад:** {d2} KZT")
+                    st.write(f"**Сроки:** {d3}")
                 else:
                     st.markdown(f"### {doc_choice.upper()}")
                     st.write(f"г. Астана, Дата: {now.strftime('%d.%m.%Y')}")
                     st.write(f"**Стороны:** {org_name} и {client_name}")
                     st.write(f"**Предмет/Детали:** {d1}")
-                    st.write(f"**Условия:** {d2}, {d3}")
+                    st.write(f"**Условия:** {d2}")
+                    st.write(f"**Сроки/Особые отметки:** {d3}")
                 
-                st.write(f"**Реквизиты:** {address}")
+                st.write(f"**Реквизиты:**\n{address}")
                 st.markdown("</div>", unsafe_allow_html=True)
                 
                 # ГЕНЕРАЦИЯ WORD
-                doc_data = {"Документ": doc_choice, "Сторона 1": org_name, "Сторона 2": client_name, "Детали": d1, "Условия": d2, "Реквизиты": address}
+                doc_data = {
+                    "Сторона 1": org_name, 
+                    "Сторона 2": client_name, 
+                    "Детали": d1, 
+                    "Условия": d2, 
+                    "Сроки": d3,
+                    "Реквизиты": address
+                }
                 word_buf = create_docx(doc_choice, doc_data)
-                st.download_button("📥 СКАЧАТЬ WORD (.DOCX)", word_buf, f"EasyDoc_{client_name}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                st.download_button(
+                    label="📥 СКАЧАТЬ WORD (.DOCX)", 
+                    data=word_buf, 
+                    file_name=f"Document_{client_name}.docx", 
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
 
             with ai_col:
                 st.markdown(f"""
                 <div class='ai-sidebar'>
                     <h3 style='color:#6366f1;'>🤖 EasyDoc AI Helper</h3>
                     <p><b>Статус:</b> Документ успешно сформирован.</p>
-                    <p><b>Анализ:</b> Проверено соответствие шаблону РК. ИИН/БИН зафиксированы.</p>
+                    <p><b>Анализ:</b> Проверено соответствие шаблону. Данные интегрированы.</p>
                     <hr>
-                    <p style='font-size:0.8rem;'><i>Совет: Убедитесь, что все страницы документа будут пронумерованы при печати.</i></p>
+                    <p style='font-size:0.8rem;'><i>Совет: Убедитесь, что реквизиты сторон указаны корректно перед печатью.</i></p>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -165,7 +207,10 @@ elif st.session_state.page == "Отзывы":
 
 elif st.session_state.page == "Авторы":
     st.header("Авторы проекта")
-    if os.path.exists("authors.jpg"): st.image("authors.jpg", use_container_width=True)
-    st.markdown("### Yeraly & Ramazan\n8 'А' класс | НИШ ФМН Астана")
+    # Ограничиваем ширину картинки, чтобы она не была огромной
+    if os.path.exists("authors.jpg"): 
+        st.image("authors.jpg", width=300) 
+        
+    st.markdown("### Yeraly & Ramazan\n8 класс | Астана")
 
-st.markdown(f"<div style='text-align:center; opacity:0.3; padding:20px;'>EasyDoc AI © {now.year} | Astana</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='text-align:center; opacity:0.3; padding:20px;'>EasyDoc AI ©️ {now.year} | Astana</div>", unsafe_allow_html=True)
