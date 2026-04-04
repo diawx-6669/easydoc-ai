@@ -3,72 +3,28 @@ import time
 from datetime import date
 import os
 
-# ===== SETTINGS =====
-st.set_page_config(page_title="EasyDoc AI", page_icon="📝", layout="centered")
+# ===== 1. НАСТРОЙКИ СТРАНИЦЫ =====
+st.set_page_config(page_title="EasyDoc AI | Enterprise", page_icon="📝", layout="centered")
 
-# ===== STYLE (Dark Gradient) =====
+# ===== 2. ДИЗАЙН (DARK PREMIUM) =====
 st.markdown("""
 <style>
-.stApp {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    color: #f1f5f9;
-    font-family: 'Inter', sans-serif;
-}
-.block-container {
-    background: #1e293b;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
-h1, h2, h3 { text-align: center; color: white !important; }
-p, label { color: #cbd5e1 !important; }
-
-/* Input styling */
-.stTextInput>div>div>input {
-    background-color: #334155 !important;
-    color: white !important;
-    border-radius: 10px;
-    border: 2px solid transparent;
-}
-.stTextInput>div>div>input:focus { border: 2px solid #6366f1 !important; }
-
-/* Button styling */
-.stButton>button {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    color: white;
-    font-weight: bold;
-    border-radius: 12px;
-    height: 55px;
-    width: 100%;
-    border: none;
-    transition: 0.3s;
-}
-.stButton>button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(99,102,241,0.5);
-}
-
-/* AI Insights Box */
-.ai-box {
-    background-color: rgba(99, 102, 241, 0.1);
-    border-left: 5px solid #6366f1;
-    padding: 15px;
-    border-radius: 5px;
-    margin: 20px 0;
-}
-
-/* Professional Footer */
-.footer-container {
-    text-align: center;
-    margin-top: 60px;
-    padding: 20px;
-    border-top: 1px solid #334155;
-}
-.footer-team { color: #6366f1; font-weight: bold; font-size: 1.1rem; }
+    .stApp { background: linear-gradient(135deg, #0f172a, #1e293b); color: #f1f5f9; font-family: 'Inter', sans-serif; }
+    .block-container { background: #1e293b; padding: 40px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+    h1, h2, h3 { text-align: center; color: white !important; }
+    p, label { color: #cbd5e1 !important; }
+    .stTextInput>div>div>input { background-color: #334155 !important; color: white !important; border-radius: 10px; border: 2px solid transparent; }
+    .stTextInput>div>div>input:focus { border: 2px solid #6366f1 !important; }
+    .stSelectbox div[data-baseweb="select"] { background-color: #334155 !important; color: white !important; border-radius: 10px; }
+    .stButton>button { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; font-weight: bold; border-radius: 12px; height: 60px; width: 100%; border: none; transition: 0.4s; text-transform: uppercase; }
+    .stButton>button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(99,102,241,0.4); }
+    .ai-card { background: rgba(99, 102, 241, 0.1); border: 1px solid #6366f1; padding: 20px; border-radius: 15px; margin: 25px 0; }
+    .footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #334155; }
+    .team-name { color: #6366f1; font-weight: bold; font-size: 1.2rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== LOGO =====
+# ===== 3. ЛОГОТИП =====
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
     if os.path.exists("logo.png"):
@@ -76,70 +32,81 @@ with col2:
     else:
         st.markdown("<h1>📝 EasyDoc AI</h1>", unsafe_allow_html=True)
 
-# ===== LANGUAGE & DOC TYPE =====
-st.markdown("### 🌍 Select Language / Тілді таңдаңыз:")
-lang = st.selectbox("", ("English", "Русский", "Қазақша"))
+# ===== 4. ВЫБОР ЯЗЫКА =====
+lang = st.selectbox("🌐 Choose Language", ("English", "Русский", "Қазақша"))
+
+# Переводы интерфейса
+translations = {
+    "English": ["Document Type", "Generate", "AI Insights", "Astana, Kazakhstan", 
+                ("Employment Contract", "NDA", "Service Agreement", "Sales Contract", "Lease Agreement")],
+    "Русский": ["Тип документа", "Сгенерировать", "Обзор AI", "Астана, Казахстан", 
+                ("Трудовой договор", "NDA", "Договор услуг", "Договор купли-продажи", "Договор аренды")],
+    "Қазақша": ["Құжат түрі", "Дайындау", "AI шолуы", "Астана, Қазақстан", 
+                ("Еңбек шарты", "NDA", "Қызмет көрсету шарты", "Сату-сатып алу шарты", "Жалдау шарты")]
+}
+
+t_labels = translations[lang]
+doc_type = st.selectbox(t_labels[0], t_labels[4])
 st.divider()
 
-# Переменные для перевода
-if lang == "English":
-    types = ("Employment Contract", "NDA", "Service Agreement")
-    btn_text = "GENERATE DOCUMENT"
-    summary_title = "🤖 AI Document Insights"
-elif lang == "Русский":
-    types = ("Трудовой договор", "NDA (Конфиденциальность)", "Договор услуг")
-    btn_text = "СГЕНЕРИРОВАТЬ"
-    summary_title = "🤖 Краткий обзор от AI"
-else:
-    types = ("Еңбек шарты", "NDA (Құпиялылық)", "Қызмет көрсету шарты")
-    btn_text = "ДАЙЫНДАУ"
-    summary_title = "🤖 AI құжатқа шолу"
-
-doc_type = st.selectbox("Document Type", types)
-
-# ===== FORM =====
-with st.form("main_form"):
+# ===== 5. ФОРМА ВВОДА =====
+with st.form("doc_form"):
     c1, c2 = st.columns(2)
-    comp = c1.text_input("Employer / Company")
-    work = c2.text_input("Employee / Partner")
+    party_a = c1.text_input("Party A (Employer/Seller/Lessor)")
+    party_b = c2.text_input("Party B (Employee/Buyer/Lessee)")
     
+    # Уникальные поля для каждого типа
     if "Employment" in doc_type or "Еңбек" in doc_type or "Трудовой" in doc_type:
-        val1 = c1.text_input("Position")
-        val2 = c2.text_input("Salary (KZT)")
+        d1 = c1.text_input("Position")
+        d2 = c2.text_input("Salary (KZT/Month)")
     elif "NDA" in doc_type:
-        val1 = c1.text_input("Duration (Years)", "5")
-        val2 = c2.text_input("Penalty Fine (KZT)", "1,000,000")
-    else:
-        val1 = c1.text_input("Service Title")
-        val2 = c2.text_input("Price / Deadline")
+        d1 = c1.text_input("Secrecy Term (Years)", "5")
+        d2 = c2.text_input("Penalty Fine (KZT)")
+    elif "Sales" in doc_type or "Сату" in doc_type or "продажи" in doc_type:
+        d1 = c1.text_input("Item Name (e.g. Laptop)")
+        d2 = c2.text_input("Total Price (KZT)")
+    elif "Lease" in doc_type or "Жалдау" in doc_type or "аренды" in doc_type:
+        d1 = c1.text_input("Address of Property")
+        d2 = c2.text_input("Monthly Rent (KZT)")
+    else: # Service
+        d1 = c1.text_input("Service Description")
+        d2 = c2.text_input("Contract Value (KZT)")
 
-    submitted = st.form_submit_button(btn_text)
+    submit = st.form_submit_button(t_labels[1])
 
-# ===== PROCESSING & OUTPUT =====
-if submitted:
-    if comp and work:
-        with st.spinner("AI is analyzing and generating..."):
+# ===== 6. ГЕНЕРАЦИЯ ЮРИДИЧЕСКОГО ТЕКСТА =====
+if submit:
+    if party_a and party_b:
+        with st.spinner("AI is drafting..."):
             time.sleep(1.5)
         
-        # 4. ФУНКЦИЯ AI SUMMARY (ИНСАЙТЫ)
-        st.markdown(f"""<div class="ai-box">
-            <h4 style="margin-top:0;">{summary_title}</h4>
-            <p>• <b>Parties:</b> {comp} & {work}</p>
-            <p>• <b>Key Terms:</b> {val1}, {val2}</p>
-            <p>• <b>Status:</b> Legally structured for Google Docs.</p>
-        </div>""", unsafe_allow_html=True)
+        # ЛОГИКА ТЕКСТА
+        if "Employment" in doc_type or "Трудовой" in doc_type or "Еңбек" in doc_type:
+            title, body = "EMPLOYMENT AGREEMENT", f"<h3>1. SUBJECT</h3><p>Party B is hired as <b>{d1}</b>.</p><h3>2. SALARY</h3><p>Monthly compensation: <b>{d2} KZT</b>.</p>"
+        elif "NDA" in doc_type:
+            title, body = "NON-DISCLOSURE AGREEMENT", f"<h3>1. CONFIDENTIALITY</h3><p>Protection period: <b>{d1} years</b>.</p><h3>2. PENALTY</h3><p>Breach fine: <b>{d2} KZT</b>.</p>"
+        elif "Sales" in doc_type or "Сату" in doc_type or "продажи" in doc_type:
+            title, body = "SALES CONTRACT", f"<h3>1. ITEM</h3><p>Seller transfers ownership of: <b>{d1}</b>.</p><h3>2. PRICE</h3><p>Total amount: <b>{d2} KZT</b>.</p>"
+        elif "Lease" in doc_type or "Жалдау" in doc_type or "аренды" in doc_type:
+            title, body = "LEASE AGREEMENT", f"<h3>1. PROPERTY</h3><p>Located at: <b>{d1}</b>.</p><h3>2. RENT</h3><p>Monthly payment: <b>{d2} KZT</b>.</p>"
+        else:
+            title, body = "SERVICE CONTRACT", f"<h3>1. SERVICES</h3><p>Scope: <b>{d1}</b>.</p><h3>2. PAYMENT</h3><p>Total: <b>{d2} KZT</b>.</p>"
 
-        # Контент для скачивания
-        html_content = f"<html><body style='font-family:Arial;'><h1>{doc_type.upper()}</h1><p>Date: {date.today()}</p><p><b>Party A:</b> {comp}</p><p><b>Party B:</b> {work}</p><p><b>Details:</b> {val1}, {val2}</p></body></html>"
-        
-        st.success("Success!")
-        st.download_button("📥 Download for Google Docs", html_content, f"EasyDoc_{work}.doc")
+        # HTML ШАБЛОН
+        html = f"""
+        <html><body style='font-family:Times New Roman; padding:50px; color:black;'>
+            <h1 style='text-align:center;'>{title}</h1>
+            <p><b>Date:</b> {date.today()} | <b>Location:</b> {t_labels[3]}</p>
+            <hr><p>This Agreement is between <b>{party_a}</b> and <b>{party_b}</b>.</p>
+            {body}
+            <h3>3. SIGNATURES</h3>
+            <p>Party A: _________________ &nbsp;&nbsp;&nbsp;&nbsp; Party B: _________________</p>
+        </body></html>
+        """
 
-# ===== 5. ПРОФЕССИОНАЛЬНЫЙ ФУТЕР =====
-st.markdown(f"""
-<div class="footer-container">
-    <p>EasyDoc AI — Automating Business Documentation</p>
-    <p>Developed by Team: <span class="footer-team">Yeraly & Ramazan</span></p>
-    <p style="font-size: 0.8rem;">Hackathon 2026 | Astana, Kazakhstan</p>
-</div>
-""", unsafe_allow_html=True)
+        # AI CARD
+        st.markdown(f"""<div class="ai-card"><h3>{t_labels[2]}</h3><p>✅ Type: {doc_type}</p><p>✅ Parties: {party_a} / {party_b}</p></div>""", unsafe_allow_html=True)
+        st.download_button("📥 Download Official .DOC", html, f"EasyDoc_{party_b}.doc", "application/msword")
+
+# ===== 7. FOOTER =====
+st.markdown(f"""<div class="footer"><p>EasyDoc AI | Team: <span class="team-name">Yeraly & Ramazan</span></p></div>""", unsafe_allow_html=True)
