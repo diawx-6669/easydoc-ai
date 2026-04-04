@@ -110,7 +110,7 @@ if lang == "Русский":
             work = st.text_input("ФИО Работника")
             sal = st.text_input("Оклад (₸)")
         
-        submitted = st.form_submit_button("🚀 СГЕНЕРИРОВАТЬ")
+        submitted = st.form_submit_button(" СГЕНЕРИРОВАТЬ")
 
     if submitted:
         if emp and work:
@@ -148,7 +148,7 @@ else:
             work = st.text_input("Жұмыскер")
             sal = st.text_input("Жалақы (₸)")
         
-        submitted = st.form_submit_button("🚀 ДАЙЫНДАУ")
+        submitted = st.form_submit_button("ДАЙЫНДАУ")
 
     if submitted:
         if emp and work:
@@ -172,4 +172,4 @@ else:
             st.download_button("📥 Жүктеу .DOC", html_doc_kz, f"Shart_{work}.doc")
 
 # ===== FOOTER =====
-st.markdown('<div class="footer-text">Made by Yeraly and Ramazan 🚀</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-text">Made by Yeraly and Ramazan </div>', unsafe_allow_html=True)
