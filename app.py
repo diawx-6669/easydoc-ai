@@ -387,4 +387,4 @@ elif st.session_state.page == "Авторы":
         st.markdown("**8 класс | Астана**")
         st.write("Разработчики проекта EasyDoc AI. Мы создали этот инструмент, чтобы автоматизировать рутину малого бизнеса и сделать работу с документами проще и быстрее.")
 
-st.markdown(f"<div style='text-align:center; opacity:0.3; padding:20px;'
+st.markdown(f"<div style='text-align:center; opacity:0.3; padding:20px; '>EasyDoc AI ©️ {now.year} | Astana</div>", unsafe_allow_html=True)
