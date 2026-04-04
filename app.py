@@ -197,7 +197,7 @@ elif st.session_state.page == "Авторы":
     if os.path.exists("authors.jpg"):
         col_a1.image("authors.jpg", width=250)
     col_a2.markdown("### Yeraly & Ramazan")
-    col_a2.write("Ученики 8 'А' класса | НИШ ФМН г. Астана")
+    col_a2.write("Ученики 8 класса | НИШ IB г. Астана")
     col_a2.info("Разработчики системы EasyDoc AI для автоматизации бизнеса.")
 
 st.markdown(f"<div style='text-align:center; opacity:0.3; padding:20px;'>EasyDoc AI © {now.year}</div>", unsafe_allow_html=True)
