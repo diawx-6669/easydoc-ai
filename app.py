@@ -19,7 +19,7 @@ def nav_to(page_name):
     st.session_state.page = page_name
     st.rerun()
 
-# ===== 1.5 СЛОВАРИ ДЛЯ ПЕРЕВОДА ИНТЕРФЕЙСА =====
+# ===== 2. БОЛЬШОЙ СЛОВАРЬ ДЛЯ ПЕРЕВОДА ВСЕГО ИНТЕРФЕЙСА И ДОКУМЕНТОВ =====
 translations = {
     "Русский": {
         "nav": {"Главная": "Главная", "Генератор": "Генератор", "Отзывы": "Отзывы", "Авторы": "Авторы"},
@@ -27,13 +27,34 @@ translations = {
         "run_btn": "ЗАПУСТИТЬ ГЕНЕРАТОР",
         "date": "Дата", "time": "Время", "nav_title": "Навигация",
         "gen_header": "Настройка шаблона", "doc_type": "Выберите тип документа:",
-        "parties": "Информация о сторонах", "details": "Детали сделки",
-        "party1": "Сторона 1 (Организация/Продавец/Работодатель + БИН)",
-        "party2": "Сторона 2 (ФИО Клиента/Покупателя/Работника + ИИН)",
-        "address": "Юридические адреса, контакты и банковские реквизиты сторон (IBAN, Банк)",
         "submit": "СОЗДАТЬ ДОКУМЕНТ", "download": "📥 СКАЧАТЬ WORD (.DOCX)",
         "feedback": "Обратная связь", "name": "Имя", "review": "Ваш отзыв", "send": "Отправить", "thanks": "Спасибо за отзыв!",
-        "authors": "Авторы проекта"
+        "authors": "Авторы проекта", "address_lbl": "Юридические адреса и реквизиты сторон",
+        "city": "г. Астана",
+        "docs": {
+            "labor": "Трудовой договор (Двуязычный Каз/Рус)",
+            "prop": "Договор купли-продажи движимого имущества",
+            "rent": "Договор аренды помещения",
+            "serv": "Договор об оказании услуг",
+            "car": "Договор купли-продажи транспортного средства"
+        },
+        "fields": {
+            "p1_labor": "Работодатель (Наименование компании и БИН)",
+            "p2_labor": "Работник (ФИО, ИИН и номер удостоверения)",
+            "p1_prop": "Продавец (ФИО/Компания, ИИН/БИН)",
+            "p2_prop": "Покупатель (ФИО/Компания, ИИН/БИН)",
+            "p1_rent": "Арендодатель (ФИО/Компания, ИИН/БИН)",
+            "p2_rent": "Арендатор (ФИО/Компания, ИИН/БИН)",
+            "p1_serv": "Заказчик (ФИО/Компания, ИИН/БИН)",
+            "p2_serv": "Исполнитель (ФИО/Компания, ИИН/БИН)",
+            "p1_car": "Продавец ТС (ФИО, ИИН, адрес)",
+            "p2_car": "Покупатель ТС (ФИО, ИИН, адрес)",
+            "labor_pos": "Должность работника", "labor_salary": "Размер оклада (в тенге)", "labor_term": "Срок договора (например, на 1 год)",
+            "prop_name": "Наименование и описание имущества", "prop_price": "Стоимость имущества", "prop_term": "Срок передачи имущества",
+            "rent_addr": "Точный адрес и площадь помещения", "rent_price": "Арендная плата в месяц", "rent_term": "Срок аренды",
+            "serv_desc": "Описание оказываемых услуг", "serv_price": "Стоимость услуг", "serv_term": "Сроки оказания услуг",
+            "car_desc": "Марка, модель и год выпуска авто", "car_price": "Стоимость автомобиля", "car_id": "Гос. номер и VIN код"
+        }
     },
     "English": {
         "nav": {"Главная": "Home", "Генератор": "Generator", "Отзывы": "Feedback", "Авторы": "Authors"},
@@ -41,13 +62,34 @@ translations = {
         "run_btn": "LAUNCH GENERATOR",
         "date": "Date", "time": "Time", "nav_title": "Navigation",
         "gen_header": "Template Setup", "doc_type": "Select document type:",
-        "parties": "Parties Information", "details": "Transaction Details",
-        "party1": "Party 1 (Organization/Seller/Employer + BIN)",
-        "party2": "Party 2 (Client/Buyer/Employee Name + IIN)",
-        "address": "Legal addresses, contacts and bank details (IBAN, Bank)",
         "submit": "CREATE DOCUMENT", "download": "📥 DOWNLOAD WORD (.DOCX)",
         "feedback": "Feedback", "name": "Name", "review": "Your review", "send": "Submit", "thanks": "Thank you for your feedback!",
-        "authors": "Project Authors"
+        "authors": "Project Authors", "address_lbl": "Legal addresses and bank details",
+        "city": "Astana city",
+        "docs": {
+            "labor": "Labor Contract (Bilingual Kaz/Rus)",
+            "prop": "Moveable Property Sale Agreement",
+            "rent": "Lease Agreement",
+            "serv": "Services Agreement",
+            "car": "Vehicle Sale Agreement"
+        },
+        "fields": {
+            "p1_labor": "Employer (Company Name & BIN)",
+            "p2_labor": "Employee (Full Name, IIN & ID Number)",
+            "p1_prop": "Seller (Full Name/Company, IIN/BIN)",
+            "p2_prop": "Buyer (Full Name/Company, IIN/BIN)",
+            "p1_rent": "Landlord (Full Name/Company, IIN/BIN)",
+            "p2_rent": "Tenant (Full Name/Company, IIN/BIN)",
+            "p1_serv": "Customer (Full Name/Company, IIN/BIN)",
+            "p2_serv": "Contractor (Full Name/Company, IIN/BIN)",
+            "p1_car": "Vehicle Seller (Name, IIN, Address)",
+            "p2_car": "Vehicle Buyer (Name, IIN, Address)",
+            "labor_pos": "Employee's Position", "labor_salary": "Salary amount (in KZT)", "labor_term": "Contract term (e.g., for 1 year)",
+            "prop_name": "Name and description of the property", "prop_price": "Property cost", "prop_term": "Transfer deadline",
+            "rent_addr": "Exact address and area of the premises", "rent_price": "Monthly rent payment", "rent_term": "Lease term",
+            "serv_desc": "Description of services rendered", "serv_price": "Cost of services", "serv_term": "Deadlines for services",
+            "car_desc": "Make, model and year of the car", "car_price": "Car cost", "car_id": "State number and VIN code"
+        }
     },
     "Қазақша": {
         "nav": {"Главная": "Басты бет", "Генератор": "Генератор", "Отзывы": "Пікірлер", "Авторы": "Авторлар"},
@@ -55,17 +97,38 @@ translations = {
         "run_btn": "ГЕНЕРАТОРДЫ ІСКЕ ҚОСУ",
         "date": "Күні", "time": "Уақыты", "nav_title": "Навигация",
         "gen_header": "Үлгіні баптау", "doc_type": "Құжат түрін таңдаңыз:",
-        "parties": "Тараптар туралы ақпарат", "details": "Мәміле деректемелері",
-        "party1": "1-тарап (Ұйым/Сатушы/Жұмыс беруші + БСН)",
-        "party2": "2-тарап (Клиент/Сатып алушы/Жұмыскер ТАӘ + ЖСН)",
-        "address": "Заңды мекенжайлар, байланыстар және банк деректемелері (IBAN, Банк)",
         "submit": "ҚҰЖАТТЫ ҚҰРУ", "download": "📥 WORD ЖҮКТЕУ (.DOCX)",
         "feedback": "Кері байланыс", "name": "Атыңыз", "review": "Пікіріңіз", "send": "Жіберу", "thanks": "Пікіріңіз үшін рахмет!",
-        "authors": "Жоба авторлары"
+        "authors": "Жоба авторлары", "address_lbl": "Тараптардың заңды мекенжайлары мен деректемелері",
+        "city": "Астана қ.",
+        "docs": {
+            "labor": "Еңбек шарты (Екі тілде Қаз/Орыс)",
+            "prop": "Жылжымалы мүлікті сатып алу-сату шарты",
+            "rent": "Үй-жайды жалдау шарты",
+            "serv": "Қызмет көрсету шарты",
+            "car": "Көлік құралын сатып алу-сату шарты"
+        },
+        "fields": {
+            "p1_labor": "Жұмыс беруші (Компания атауы және БСН)",
+            "p2_labor": "Жұмыскер (ТАӘ, ЖСН және куәлік нөмірі)",
+            "p1_prop": "Сатушы (ТАӘ/Компания, ЖСН/БСН)",
+            "p2_prop": "Сатып алушы (ТАӘ/Компания, ЖСН/БСН)",
+            "p1_rent": "Жалға беруші (ТАӘ/Компания, ЖСН/БСН)",
+            "p2_rent": "Жалға алушы (ТАӘ/Компания, ЖСН/БСН)",
+            "p1_serv": "Тапсырыс беруші (ТАӘ/Компания, ЖСН/БСН)",
+            "p2_serv": "Орындаушы (ТАӘ/Компания, ЖСН/БСН)",
+            "p1_car": "Көлік сатушысы (ТАӘ, ЖСН, мекенжайы)",
+            "p2_car": "Көлік сатып алушысы (ТАӘ, ЖСН, мекенжайы)",
+            "labor_pos": "Қызметкердің лауазымы", "labor_salary": "Жалақы мөлшері (теңгемен)", "labor_term": "Шарт мерзімі (мысалы, 1 жылға)",
+            "prop_name": "Мүліктің атауы мен сипаттамасы", "prop_price": "Мүліктің құны", "prop_term": "Мүлікті тапсыру мерзімі",
+            "rent_addr": "Үй-жайдың нақты мекенжайы мен ауданы", "rent_price": "Айлық жалдау ақысы", "rent_term": "Жалға алу мерзімі",
+            "serv_desc": "Көрсетілетін қызметтердің сипаттамасы", "serv_price": "Қызметтердің құны", "serv_term": "Қызмет көрсету мерзімдері",
+            "car_desc": "Автокөліктің маркасы, моделі және шыққан жылы", "car_price": "Автокөліктің құны", "car_id": "Мемлекеттік нөмірі және VIN коды"
+        }
     }
 }
 
-# ===== 2. ДИЗАЙН (CSS) =====
+# ===== 3. ДИЗАЙН (CSS) =====
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
@@ -77,97 +140,92 @@ st.markdown("""
         font-family: 'Times New Roman', serif; border: 1px solid #ccc;
         box-shadow: 0 15px 35px rgba(0,0,0,0.5); line-height: 1.5;
     }
-    .doc-preview p, .doc-preview div, .doc-preview b, .doc-preview h3 { color: black !important; }
+    .doc-preview p, .doc-preview div, .doc-preview b, .doc-preview h3, .doc-preview span { color: black !important; }
     .ai-sidebar { background: rgba(99, 102, 241, 0.1); border: 1px solid #6366f1; padding: 20px; border-radius: 15px; }
     .feedback-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #6366f1; }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 3. ГЕНЕРАЦИЯ WORD (ДИНАМИЧЕСКИЕ ШАБЛОНЫ) =====
-def create_docx(doc_type, data):
+# ===== 4. ГЕНЕРАЦИЯ WORD В ЗАВИСИМОСТИ ОТ ЯЗЫКА =====
+def create_docx(doc_id, data, lang):
     doc = Document()
+    date_str = datetime.now().strftime('%d.%m.%Y')
     
-    heading = doc.add_heading(doc_type.upper(), 1)
-    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    date_p = doc.add_paragraph()
-    date_p.add_run(f"г. Астана\t\t\t\t\t\t\t\t{datetime.now().strftime('%d.%m.%Y')} г.")
-    
-    p = doc.add_paragraph()
-    
-    # ---------------- ЛОГИКА ДЛЯ РАЗНЫХ ШАБЛОНОВ ----------------
-    if "Трудовой" in doc_type:
-        p.add_run(f"\n{data.get('Сторона 1')} (далее - Работодатель), с одной стороны, и {data.get('Сторона 2')} (далее - Работник), с другой стороны, совместно именуемые «Стороны», заключили настоящий Трудовой договор о нижеследующем:\n")
+    # Задаем язык самого шаблона в зависимости от выбранного
+    if doc_id == "labor":
+        heading = doc.add_heading("ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР", 1)
+        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
-        doc.add_heading('1. ПРЕДМЕТ ДОГОВОРА', level=2)
-        doc.add_paragraph(f"1.1. Работодатель принимает Работника на работу, а Работник обязуется выполнять работу (трудовую функцию) в должности: {data.get('Детали')}.")
+        p = doc.add_paragraph()
+        p.add_run(f"Астана қ. / г. Астана \t\t\t\t\t\t\t {date_str} ж/г.")
         
-        doc.add_heading('2. УСЛОВИЯ ОПЛАТЫ И СРОКИ', level=2)
-        doc.add_paragraph(f"2.1. Работнику устанавливается оклад в размере: {data.get('Условия')}.")
-        doc.add_paragraph(f"2.2. Срок действия договора: {data.get('Сроки')}.")
-        role_1, role_2 = "Работодатель", "Работник"
+        p2 = doc.add_paragraph()
+        p2.add_run(f"\nРаботодатель / Жұмыс беруші: {data.get('p1')}\nРаботник / Жұмыскер: {data.get('p2')}\n\n")
+        p2.add_run("Стороны заключили настоящий договор / Тараптар осы шартты жасасты:\n").bold = True
+        
+        doc.add_heading('1. Предмет / Шарттың мәні', level=2)
+        doc.add_paragraph(f"Принять на работу на должность / Жұмысқа қабылдау лауазымы: {data.get('d1')}")
+        
+        doc.add_heading('2. Оплата и Сроки / Төлем және Мерзімдері', level=2)
+        doc.add_paragraph(f"Оклад составляет / Жалақы мөлшері: {data.get('d2')} KZT.")
+        doc.add_paragraph(f"Срок действия / Қолданылу мерзімі: {data.get('d3')}.")
 
-    elif "имущества" in doc_type:
-        p.add_run(f"\n{data.get('Сторона 1')} (далее - Продавец), с одной стороны, и {data.get('Сторона 2')} (далее - Покупатель), с другой стороны, заключили настоящий Договор о нижеследующем:\n")
+    else:
+        # Для остальных документов переводим саму структуру на выбранный язык
+        titles = {
+            "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ", "rent": "ДОГОВОР АРЕНДЫ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТС"},
+            "English": {"prop": "SALE AND PURCHASE AGREEMENT", "rent": "LEASE AGREEMENT", "serv": "SERVICES AGREEMENT", "car": "VEHICLE SALE AGREEMENT"},
+            "Қазақша": {"prop": "САТЫП АЛУ-САТУ ШАРТЫ", "rent": "ЖАЛДАУ ШАРТЫ", "serv": "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", "car": "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ"}
+        }
         
-        doc.add_heading('1. ПРЕДМЕТ ДОГОВОРА', level=2)
-        doc.add_paragraph(f"1.1. Продавец обязуется передать в собственность Покупателя движимое имущество, а именно: {data.get('Детали')}, а Покупатель обязуется принять имущество и уплатить за него цену.")
+        doc_heading = titles[lang][doc_id]
+        heading = doc.add_heading(doc_heading, 1)
+        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
-        doc.add_heading('2. ЦЕНА ДОГОВОРА И ПОРЯДОК РАСЧЕТОВ', level=2)
-        doc.add_paragraph(f"2.1. Общая стоимость имущества составляет: {data.get('Условия')}.")
-        doc.add_paragraph(f"2.2. Сроки передачи имущества и оплаты: {data.get('Сроки')}.")
-        role_1, role_2 = "Продавец", "Покупатель"
+        city = translations[lang]["city"]
+        p = doc.add_paragraph()
+        p.add_run(f"{city} \t\t\t\t\t\t\t {date_str}")
+        
+        # Названия ролей для преамбулы
+        roles = {
+            "Русский": {"prop": ("Продавец", "Покупатель"), "rent": ("Арендодатель", "Арендатор"), "serv": ("Заказчик", "Исполнитель"), "car": ("Продавец", "Покупатель")},
+            "English": {"prop": ("Seller", "Buyer"), "rent": ("Landlord", "Tenant"), "serv": ("Customer", "Contractor"), "car": ("Seller", "Buyer")},
+            "Қазақша": {"prop": ("Сатушы", "Сатып алушы"), "rent": ("Жалға беруші", "Жалға алушы"), "serv": ("Тапсырыс беруші", "Орындаушы"), "car": ("Сатушы", "Сатып алушы")}
+        }
+        r1, r2 = roles[lang][doc_id]
+        
+        # Преамбула на выбранном языке
+        p2 = doc.add_paragraph()
+        if lang == "Русский":
+            p2.add_run(f"\n{data.get('p1')} (далее - {r1}), с одной стороны, и {data.get('p2')} (далее - {r2}), с другой стороны, заключили настоящий договор о нижеследующем:\n")
+        elif lang == "English":
+            p2.add_run(f"\n{data.get('p1')} (hereinafter - {r1}), on the one part, and {data.get('p2')} (hereinafter - {r2}), on the other part, have concluded this agreement as follows:\n")
+        else:
+            p2.add_run(f"\nБір тараптан {data.get('p1')} (бұдан әрі - {r1}), және екінші тараптан {data.get('p2')} (бұдан әрі - {r2}), төмендегілер туралы осы шартты жасасты:\n")
 
-    elif "аренды" in doc_type:
-        p.add_run(f"\n{data.get('Сторона 1')} (далее - Арендодатель), с одной стороны, и {data.get('Сторона 2')} (далее - Арендатор), с другой стороны, заключили настоящий Договор аренды о нижеследующем:\n")
+        # Разделы на выбранном языке
+        secs = {
+            "Русский": ["1. ПРЕДМЕТ ДОГОВОРА", "2. ФИНАНСОВЫЕ УСЛОВИЯ И СРОКИ", "3. АДРЕСА И РЕКВИЗИТЫ СТОРОН"],
+            "English": ["1. SUBJECT OF THE AGREEMENT", "2. FINANCIAL CONDITIONS AND TERMS", "3. ADDRESSES AND DETAILS OF THE PARTIES"],
+            "Қазақша": ["1. ШАРТТЫҢ МӘНІ", "2. ҚАРЖЫЛЫҚ ШАРТТАР МЕН МЕРЗІМДЕР", "3. ТАРАПТАРДЫҢ МЕКЕНЖАЙЛАРЫ МЕН ДЕРЕКТЕМЕЛЕРІ"]
+        }
         
-        doc.add_heading('1. ПРЕДМЕТ ДОГОВОРА', level=2)
-        doc.add_paragraph(f"1.1. Арендодатель передает, а Арендатор принимает во временное владение и пользование помещение, расположенное по адресу: {data.get('Детали')}.")
+        doc.add_heading(secs[lang][0], level=2)
+        doc.add_paragraph(f"{data.get('d1')}")
         
-        doc.add_heading('2. АРЕНДНАЯ ПЛАТА И СРОК', level=2)
-        doc.add_paragraph(f"2.1. Размер арендной платы составляет: {data.get('Условия')} в месяц.")
-        doc.add_paragraph(f"2.2. Срок аренды: {data.get('Сроки')}.")
-        role_1, role_2 = "Арендодатель", "Арендатор"
-
-    elif "услуг" in doc_type:
-        p.add_run(f"\n{data.get('Сторона 1')} (далее - Заказчик), с одной стороны, и {data.get('Сторона 2')} (далее - Исполнитель), с другой стороны, заключили настоящий Договор об оказании услуг о нижеследующем:\n")
+        doc.add_heading(secs[lang][1], level=2)
+        doc.add_paragraph(f"{data.get('d2')}")
+        doc.add_paragraph(f"{data.get('d3')}")
         
-        doc.add_heading('1. ПРЕДМЕТ ДОГОВОРА', level=2)
-        doc.add_paragraph(f"1.1. Заказчик поручает, а Исполнитель принимает на себя обязательство оказать следующие услуги: {data.get('Детали')}.")
+        doc.add_heading(secs[lang][2], level=2)
+        doc.add_paragraph(f"{data.get('addr')}")
         
-        doc.add_heading('2. СТОИМОСТЬ УСЛУГ И СРОКИ ИСПОЛНЕНИЯ', level=2)
-        doc.add_paragraph(f"2.1. Стоимость оказываемых услуг составляет: {data.get('Условия')}.")
-        doc.add_paragraph(f"2.2. Сроки выполнения услуг: {data.get('Сроки')}.")
-        role_1, role_2 = "Заказчик", "Исполнитель"
-
-    elif "Авто" in doc_type:
-        p.add_run(f"\n{data.get('Сторона 1')} (далее - Продавец), с одной стороны, и {data.get('Сторона 2')} (далее - Покупатель), с другой стороны, заключили настоящий Договор купли-продажи транспортного средства:\n")
-        
-        doc.add_heading('1. ПРЕДМЕТ ДОГОВОРА', level=2)
-        doc.add_paragraph(f"1.1. Продавец обязуется передать в собственность Покупателя Транспортное Средство: {data.get('Детали')}.")
-        doc.add_paragraph(f"1.2. Идентификационные данные ТС (Гос. номер и VIN): {data.get('Сроки')}.")
-        
-        doc.add_heading('2. ЦЕНА ДОГОВОРА', level=2)
-        doc.add_paragraph(f"2.1. Стоимость Транспортного Средства составляет: {data.get('Условия')}.")
-        role_1, role_2 = "Продавец", "Покупатель"
-
-    # ---------------- ОБЩИЕ ПУНКТЫ ----------------
-    doc.add_heading('3. ОТВЕТСТВЕННОСТЬ СТОРОН', level=2)
-    doc.add_paragraph("3.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору Стороны несут ответственность в соответствии с действующим законодательством Республики Казахстан.")
-    
-    doc.add_heading('4. АДРЕСА И РЕКВИЗИТЫ СТОРОН', level=2)
-    doc.add_paragraph(f"{data.get('Реквизиты')}\n")
-    
-    sign_p = doc.add_paragraph()
-    sign_p.add_run("\nПОДПИСИ СТОРОН:\n").bold = True
-    sign_p.add_run(f"От лица ({role_1}): ___________________        От лица ({role_2}): ___________________")
-    
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
 
-# ===== 4. SIDEBAR =====
+# ===== 5. SIDEBAR И ЧАСЫ =====
 tz = pytz.timezone('Asia/Almaty')
 now = datetime.now(tz)
 
@@ -179,7 +237,7 @@ with st.sidebar:
     st.divider()
     st.write(f"📅 **{t['date']}:** {now.strftime('%d.%m.%Y')}")
     
-    # LIVE CLOCK ПОМОЩЬЮ HTML/JS КОМПОНЕНТА
+    # LIVE CLOCK С ПОМОЩЬЮ HTML/JS КОМПОНЕНТА
     clock_html = f"""
     <div style="font-family: 'Inter', sans-serif; color: #f1f5f9; font-size: 1rem; margin-bottom: 1rem;">
         🕒 <b>{t['time']}:</b> <span id="live-clock"></span>
@@ -203,7 +261,7 @@ with st.sidebar:
     selected_label = st.radio(t["nav_title"], menu_labels, index=menu_keys.index(st.session_state.page))
     st.session_state.page = menu_keys[menu_labels.index(selected_label)]
 
-# ===== 5. КОНТЕНТ =====
+# ===== 6. КОНТЕНТ ПО СТРАНИЦАМ =====
 
 if st.session_state.page == "Главная":
     st.markdown("<div class='main-title'>EasyDoc AI</div>", unsafe_allow_html=True)
@@ -218,58 +276,57 @@ if st.session_state.page == "Главная":
         nav_to("Генератор")
 
 elif st.session_state.page == "Генератор":
-    if os.path.exists("logo_pen.png"): 
-        c1, c2, c3 = st.columns([1, 1, 1])
-        with c2:
-            st.image("logo_pen.png", use_container_width=True)
-    
     st.header(t["gen_header"])
-    doc_choice = st.selectbox(t["doc_type"], [
-        "Трудовой договор (Двуязычный Каз/Рус)",
-        "Договор купли-продажи имущества",
-        "Договор аренды помещения",
-        "Договор об оказании услуг",
-        "Договор купли-продажи ТС (Авто)"
-    ])
+    
+    # Динамический список документов на выбранном языке
+    docs_mapping = {
+        t["docs"]["labor"]: "labor",
+        t["docs"]["prop"]: "prop",
+        t["docs"]["rent"]: "rent",
+        t["docs"]["serv"]: "serv",
+        t["docs"]["car"]: "car"
+    }
+    
+    doc_choice_ui = st.selectbox(t["doc_type"], list(docs_mapping.keys()))
+    doc_id = docs_mapping[doc_choice_ui]
 
+    # Специфические вопросы формы для каждого документа
     with st.form("main_form"):
-        st.subheader(t["parties"])
+        st.subheader("1. " + t["address_lbl"].split()[0])
         c1, c2 = st.columns(2)
         
-        # Динамические плейсхолдеры в зависимости от типа документа
-        if "Трудовой" in doc_choice:
-            p1_label, p2_label = "Работодатель (Название + БИН)", "Работник (ФИО + ИИН)"
-        elif "имущества" in doc_choice or "Авто" in doc_choice:
-            p1_label, p2_label = "Продавец (ФИО/Организация + ИИН/БИН)", "Покупатель (ФИО/Организация + ИИН/БИН)"
-        elif "аренды" in doc_choice:
-            p1_label, p2_label = "Арендодатель (ФИО/Организация)", "Арендатор (ФИО/Организация)"
-        else:
-            p1_label, p2_label = "Заказчик (ФИО/Организация)", "Исполнитель (ФИО/Организация)"
-            
-        org_name = c1.text_input(p1_label)
-        client_name = c2.text_input(p2_label)
+        # Получаем ключи вопросов из словаря
+        p1_q = t["fields"][f"p1_{doc_id}"]
+        p2_q = t["fields"][f"p2_{doc_id}"]
         
-        st.subheader(t["details"])
+        org_name = c1.text_input(p1_q)
+        client_name = c2.text_input(p2_q)
+        
+        st.subheader("2. Детали")
         col3, col4 = st.columns(2)
         
-        if "Трудовой" in doc_choice:
-            d1 = col3.text_input("Должность работника")
-            d2 = col4.text_input("Оклад (цифрами и прописью)")
-            d3 = st.text_input("Срок действия договора (например: 1 год)")
-        elif "аренды" in doc_choice:
-            d1 = col3.text_input("Точный адрес объекта аренды")
-            d2 = col4.text_input("Ежемесячная арендная плата")
-            d3 = st.text_input("Срок аренды и целевое назначение (жилое/офис)")
-        elif "ТС (Авто)" in doc_choice:
-            d1 = col3.text_input("Марка, Модель, Год выпуска")
-            d2 = col4.text_input("Цена автомобиля")
-            d3 = st.text_input("Гос. номер и VIN код")
-        else:
-            d1 = col3.text_input("Точный предмет договора (описание)")
-            d2 = col4.text_input("Сумма договора")
-            d3 = st.text_input("Сроки выполнения/поставки")
+        if doc_id == "labor":
+            d1 = col3.text_input(t["fields"]["labor_pos"])
+            d2 = col4.text_input(t["fields"]["labor_salary"])
+            d3 = st.text_input(t["fields"]["labor_term"])
+        elif doc_id == "rent":
+            d1 = col3.text_input(t["fields"]["rent_addr"])
+            d2 = col4.text_input(t["fields"]["rent_price"])
+            d3 = st.text_input(t["fields"]["rent_term"])
+        elif doc_id == "car":
+            d1 = col3.text_input(t["fields"]["car_desc"])
+            d2 = col4.text_input(t["fields"]["car_price"])
+            d3 = st.text_input(t["fields"]["car_id"])
+        elif doc_id == "serv":
+            d1 = col3.text_input(t["fields"]["serv_desc"])
+            d2 = col4.text_input(t["fields"]["serv_price"])
+            d3 = st.text_input(t["fields"]["serv_term"])
+        else: # prop
+            d1 = col3.text_input(t["fields"]["prop_name"])
+            d2 = col4.text_input(t["fields"]["prop_price"])
+            d3 = st.text_input(t["fields"]["prop_term"])
 
-        address = st.text_area(t["address"])
+        address = st.text_area(t["address_lbl"])
         submitted = st.form_submit_button(t["submit"])
 
     if submitted:
@@ -279,112 +336,31 @@ elif st.session_state.page == "Генератор":
             with res_col:
                 st.markdown("<div class='doc-preview'>", unsafe_allow_html=True)
                 
-                # ДИНАМИЧЕСКОЕ ПРЕВЬЮ
-                if "Трудовой" in doc_choice:
+                # Рендеринг ПРЕВЬЮ на выбранном языке
+                if doc_id == "labor":
                     st.markdown("<h3 style='text-align:center;'>№ __ ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР</h3>", unsafe_allow_html=True)
                     st.markdown(f"<p style='display:flex; justify-content:space-between;'><span>Астана қ. / г. Астана</span><span>{now.strftime('%d.%m.%Y')} ж/г.</span></p>", unsafe_allow_html=True)
                     k1, k2 = st.columns(2)
                     k1.write(f"**Жұмыс беруші:** {org_name}\n\n**Жұмыскер:** {client_name}\n\nЛауазымы: {d1}")
                     k2.write(f"**Работодатель:** {org_name}\n\n**Работник:** {client_name}\n\nДолжность: {d1}")
-                    st.write(f"**Жалақы / Оклад:** {d2} KZT<br>**Сроки:** {d3}", unsafe_allow_html=True)
-                    r1, r2 = "Работодатель", "Работник"
+                    st.write(f"**Оклад / Жалақы:** {d2} KZT<br>**Мерзімі / Срок:** {d3}", unsafe_allow_html=True)
+                    r1, r2 = "Работодатель / Жұмыс беруші", "Работник / Жұмыскер"
                 else:
-                    st.markdown(f"<h3 style='text-align:center;'>{doc_choice.upper()}</h3>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='display:flex; justify-content:space-between;'><span>г. Астана</span><span>{now.strftime('%d.%m.%Y')} г.</span></p>", unsafe_allow_html=True)
+                    titles_preview = {
+                        "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ", "rent": "ДОГОВОР АРЕНДЫ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТС"},
+                        "English": {"prop": "SALE AND PURCHASE AGREEMENT", "rent": "LEASE AGREEMENT", "serv": "SERVICES AGREEMENT", "car": "VEHICLE SALE AGREEMENT"},
+                        "Қазақша": {"prop": "САТЫП АЛУ-САТУ ШАРТЫ", "rent": "ЖАЛДАУ ШАРТЫ", "serv": "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", "car": "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ"}
+                    }
+                    roles_preview = {
+                        "Русский": {"prop": ("Продавец", "Покупатель"), "rent": ("Арендодатель", "Арендатор"), "serv": ("Заказчик", "Исполнитель"), "car": ("Продавец", "Покупатель")},
+                        "English": {"prop": ("Seller", "Buyer"), "rent": ("Landlord", "Tenant"), "serv": ("Customer", "Contractor"), "car": ("Seller", "Buyer")},
+                        "Қазақша": {"prop": ("Сатушы", "Сатып алушы"), "rent": ("Жалға беруші", "Жалға алушы"), "serv": ("Тапсырыс беруші", "Орындаушы"), "car": ("Сатушы", "Сатып алушы")}
+                    }
                     
-                    if "имущества" in doc_choice or "Авто" in doc_choice:
-                        r1, r2 = "Продавец", "Покупатель"
-                    elif "аренды" in doc_choice:
-                        r1, r2 = "Арендодатель", "Арендатор"
-                    else:
-                        r1, r2 = "Заказчик", "Исполнитель"
-                        
-                    st.markdown(f"<p><b>{org_name}</b> (далее - {r1}), с одной стороны, и <b>{client_name}</b> (далее - {r2}), с другой стороны, заключили настоящий договор о нижеследующем:</p>", unsafe_allow_html=True)
+                    r1, r2 = roles_preview[selected_lang][doc_id]
+                    st.markdown(f"<h3 style='text-align:center;'>{titles_preview[selected_lang][doc_id]}</h3>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='display:flex; justify-content:space-between;'><span>{translations[selected_lang]['city']}</span><span>{now.strftime('%d.%m.%Y')}</span></p>", unsafe_allow_html=True)
                     
-                    st.markdown("<b>1. ПРЕДМЕТ ДОГОВОРА</b>", unsafe_allow_html=True)
-                    st.write(f"1.1. Объектом договора является: {d1}.")
-                    if "Авто" in doc_choice: st.write(f"1.2. Данные (VIN/Госномер): {d3}.")
-                    
-                    st.markdown("<b>2. ФИНАНСОВЫЕ УСЛОВИЯ И СРОКИ</b>", unsafe_allow_html=True)
-                    st.write(f"2.1. Сумма/Оплата по договору: {d2}.")
-                    if "Авто" not in doc_choice: st.write(f"2.2. Сроки и условия: {d3}.")
-                    
-                    st.markdown("<b>3. АДРЕСА И РЕКВИЗИТЫ СТОРОН</b>", unsafe_allow_html=True)
-                    st.write(f"{address}")
-                    
-                st.write(f"<br><b>ПОДПИСИ СТОРОН:</b><br>От лица ({r1}): _______________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;От лица ({r2}): _______________", unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                # ГЕНЕРАЦИЯ WORD
-                doc_data = {
-                    "Сторона 1": org_name, 
-                    "Сторона 2": client_name, 
-                    "Детали": d1, 
-                    "Условия": d2, 
-                    "Сроки": d3,
-                    "Реквизиты": address
-                }
-                word_buf = create_docx(doc_choice, doc_data)
-                st.download_button(
-                    label=t["download"], 
-                    data=word_buf, 
-                    file_name=f"Document_{client_name}.docx", 
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
-
-            with ai_col:
-                st.markdown(f"""
-                <div class='ai-sidebar'>
-                    <h3 style='color:#6366f1;'>🤖 EasyDoc AI Helper</h3>
-                    <p><b>Статус:</b> Документ успешно сформирован.</p>
-                    <p><b>Анализ:</b> Применен шаблон <i>{doc_choice}</i>. Условия интегрированы.</p>
-                    <hr>
-                    <p style='font-size:0.8rem;'><i>Совет: Внимательно проверьте реквизиты и ИИН/БИН перед печатью и подписанием.</i></p>
-                </div>
-                """, unsafe_allow_html=True)
-
-elif st.session_state.page == "Отзывы":
-    st.header(t["feedback"])
-    
-    # ФЕЙКОВЫЕ ОТЗЫВЫ И ПОЖЕЛАНИЯ
-    st.subheader("Последние отзывы пользователей")
-    st.markdown("""
-    <div class='feedback-card'>
-        <b>👤 Айдос, ИП "AlmatyTech"</b> ⭐⭐⭐⭐⭐<br>
-        <i>Отличный генератор! Сэкономил кучу времени на договорах аренды. <br>
-        <span style='color: #fbbf24;'>💡 Пожелание:</span> Добавьте возможность загружать свои собственные шаблоны.</i>
-    </div>
-    <div class='feedback-card'>
-        <b>👤 Елена, HR-менеджер</b> ⭐⭐⭐⭐⭐<br>
-        <i>Трудовые договоры на двух языках (Каз/Рус) — это просто спасение! <br>
-        <span style='color: #fbbf24;'>💡 Пожелание:</span> Было бы здорово, если бы можно было сохранять базу сотрудников, чтобы не вводить ИИН каждый раз.</i>
-    </div>
-    <div class='feedback-card'>
-        <b>👤 Марат, Автосалон</b> ⭐⭐⭐⭐<br>
-        <i>Всё супер, договоры купли-продажи авто составляются за секунду. <br>
-        <span style='color: #fbbf24;'>💡 Пожелание:</span> Хотелось бы интеграцию с Egov для автозаполнения данных по ИИН/БИН.</i>
-    </div>
-    <hr>
-    """, unsafe_allow_html=True)
-    
-    with st.form("feed"):
-        st.write("**Оставить свой отзыв:**")
-        st.text_input(t["name"])
-        st.text_area(t["review"])
-        if st.form_submit_button(t["send"]): 
-            st.success(t["thanks"])
-
-elif st.session_state.page == "Авторы":
-    st.header(t["authors"])
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        if os.path.exists("authors.jpg"): 
-            st.image("authors.jpg", use_container_width=True) 
-            
-    with col2:
-        st.markdown("### Yeraly & Ramazan")
-        st.markdown("**8 класс | Астана**")
-        st.write("Разработчики проекта EasyDoc AI. Мы создали этот инструмент, чтобы автоматизировать рутину малого бизнеса и сделать работу с документами проще и быстрее.")
-
-st.markdown(f"<div style='text-align:center; opacity:0.3; padding:20px; '>EasyDoc AI ©️ {now.year} | Astana</div>", unsafe_allow_html=True)
+                    # Логика текста преамбулы в превью
+                    if selected_lang == "Русский":
+                        st.markdown(f"<p><b>{org_name}</b> (далее - {r1}), с одной стороны, и <b>{client_name}</b> (далее - {r2}), с другой стороны, заключили настоящий договор:</p>", unsafe_allow_html=True)
