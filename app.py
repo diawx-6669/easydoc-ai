@@ -3,10 +3,10 @@ import time
 from datetime import date
 import os
 
-# ===== НАСТРОЙКА СТРАНИЦЫ =====
+# ===== SETTINGS =====
 st.set_page_config(page_title="EasyDoc AI", page_icon="📝", layout="centered")
 
-# ===== СТИЛЬ (ТВОЙ НОВЫЙ ДИЗАЙН) =====
+# ===== STYLE (Dark Gradient) =====
 st.markdown("""
 <style>
 .stApp {
@@ -20,28 +20,19 @@ st.markdown("""
     border-radius: 20px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
-h1, h2, h3 {
-    text-align: center;
-    color: white !important;
-}
-p, label {
-    color: #cbd5e1 !important;
-}
+h1, h2, h3 { text-align: center; color: white !important; }
+p, label { color: #cbd5e1 !important; }
+
+/* Input styling */
 .stTextInput>div>div>input {
     background-color: #334155 !important;
     color: white !important;
     border-radius: 10px;
     border: 2px solid transparent;
-    padding: 12px;
 }
-.stTextInput>div>div>input:focus {
-    border: 2px solid #6366f1 !important;
-}
-.stSelectbox div[data-baseweb="select"] {
-    background-color: #334155 !important;
-    color: white !important;
-    border-radius: 10px;
-}
+.stTextInput>div>div>input:focus { border: 2px solid #6366f1 !important; }
+
+/* Button styling */
 .stButton>button {
     background: linear-gradient(135deg, #6366f1, #4f46e5);
     color: white;
@@ -56,15 +47,28 @@ p, label {
     transform: scale(1.05);
     box-shadow: 0 10px 25px rgba(99,102,241,0.5);
 }
-.footer-text {
-    text-align: center;
-    color: #94a3b8;
-    margin-top: 40px;
+
+/* AI Insights Box */
+.ai-box {
+    background-color: rgba(99, 102, 241, 0.1);
+    border-left: 5px solid #6366f1;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 20px 0;
 }
+
+/* Professional Footer */
+.footer-container {
+    text-align: center;
+    margin-top: 60px;
+    padding: 20px;
+    border-top: 1px solid #334155;
+}
+.footer-team { color: #6366f1; font-weight: bold; font-size: 1.1rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== ЛОГО =====
+# ===== LOGO =====
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
     if os.path.exists("logo.png"):
@@ -72,97 +76,70 @@ with col2:
     else:
         st.markdown("<h1>📝 EasyDoc AI</h1>", unsafe_allow_html=True)
 
-# ===== ВЫБОР ЯЗЫКА =====
-st.markdown("### 🌍 Выберите язык / Тілді таңдаңыз:")
-lang = st.selectbox("", ("Русский", "Қазақша"))
+# ===== LANGUAGE & DOC TYPE =====
+st.markdown("### 🌍 Select Language / Тілді таңдаңыз:")
+lang = st.selectbox("", ("English", "Русский", "Қазақша"))
 st.divider()
 
-# ===== ЛОГИКА ДЛЯ РУССКОГО ЯЗЫКА =====
-if lang == "Русский":
-    st.markdown("### 📄 Выберите тип документа:")
-    doc_type = st.selectbox("Тип документа", ("Трудовой договор", "NDA (Конфиденциальность)", "Договор оказания услуг"))
-
-    with st.form("form_ru"):
-        if doc_type == "Трудовой договор":
-            c1, c2 = st.columns(2)
-            comp = c1.text_input("Организация")
-            pos = c1.text_input("Должность")
-            work = c2.text_input("ФИО Работника")
-            sal = c2.text_input("Оклад (₸)")
-        elif doc_type == "NDA (Конфиденциальность)":
-            c1, c2 = st.columns(2)
-            comp = c1.text_input("Компания (Раскрывающая сторона)")
-            work = c2.text_input("Получатель (ФИО)")
-            fine = c1.text_input("Штраф за разглашение (₸)")
-            term = c2.text_input("Срок действия (лет)")
-        else:
-            c1, c2 = st.columns(2)
-            comp = c1.text_input("Заказчик")
-            work = c2.text_input("Исполнитель")
-            service = c1.text_input("Вид услуги")
-            price = c2.text_input("Стоимость услуг (₸)")
-        
-        submitted = st.form_submit_button("СГЕНЕРИРОВАТЬ")
-
-    if submitted:
-        if comp and work:
-            with st.spinner("Создание документа..."):
-                time.sleep(1)
-            
-            # Наполнение документа в зависимости от типа
-            if doc_type == "Трудовой договор":
-                title, content = "ТРУДОВОЙ ДОГОВОР", f"<p>Работнику {work} в компании {comp} на позиции {pos} назначен оклад {sal} тенге.</p>"
-            elif doc_type == "NDA (Конфиденциальность)":
-                title, content = "СОГЛАШЕНИЕ О НЕРАЗГЛАШЕНИИ", f"<p>{work} обязуется хранить тайны {comp} в течение {term} лет. Штраф: {fine} тенге.</p>"
-            else:
-                title, content = "ДОГОВОР ОКАЗАНИЯ УСЛУГ", f"<p>Исполнитель {work} обязуется выполнить '{service}' для Заказчика {comp} за {price} тенге.</p>"
-
-            html_doc = f"<html><body style='font-family:Arial;'><h1>{title}</h1><p>Дата: {date.today()}</p>{content}<br><p>Подпись: ________</p></body></html>"
-            st.success("✅ Готово!")
-            st.download_button("📥 Скачать .DOC", html_doc, f"{doc_type}_{work}.doc")
-
-# ===== ЛОГИКА ДЛЯ КАЗАХСКОГО ЯЗЫКА =====
+# Переменные для перевода
+if lang == "English":
+    types = ("Employment Contract", "NDA", "Service Agreement")
+    btn_text = "GENERATE DOCUMENT"
+    summary_title = "🤖 AI Document Insights"
+elif lang == "Русский":
+    types = ("Трудовой договор", "NDA (Конфиденциальность)", "Договор услуг")
+    btn_text = "СГЕНЕРИРОВАТЬ"
+    summary_title = "🤖 Краткий обзор от AI"
 else:
-    st.markdown("### 📄 Құжат түрін таңдаңыз:")
-    doc_type = st.selectbox("Құжат түрі", ("Еңбек шарты", "NDA (Құпиялылық)", "Қызмет көрсету шарты"))
+    types = ("Еңбек шарты", "NDA (Құпиялылық)", "Қызмет көрсету шарты")
+    btn_text = "ДАЙЫНДАУ"
+    summary_title = "🤖 AI құжатқа шолу"
 
-    with st.form("form_kz"):
-        if doc_type == "Еңбек шарты":
-            c1, c2 = st.columns(2)
-            comp = c1.text_input("Жұмыс беруші")
-            pos = c1.text_input("Қызметі")
-            work = c2.text_input("Жұмыскер")
-            sal = c2.text_input("Жалақы (₸)")
-        elif doc_type == "NDA (Құпиялылық)":
-            c1, c2 = st.columns(2)
-            comp = c1.text_input("Мекеме (Ақпарат беруші)")
-            work = c2.text_input("Алушы (Аты-жөні)")
-            fine = c1.text_input("Айыппұл мөлшері (₸)")
-            term = c2.text_input("Мерзімі (жыл)")
-        else:
-            c1, c2 = st.columns(2)
-            comp = c1.text_input("Тапсырыс беруші")
-            work = c2.text_input("Орындаушы")
-            service = c1.text_input("Қызмет түрі")
-            price = c2.text_input("Қызмет құны (₸)")
+doc_type = st.selectbox("Document Type", types)
 
-        submitted = st.form_submit_button("ДАЙЫНДАУ")
+# ===== FORM =====
+with st.form("main_form"):
+    c1, c2 = st.columns(2)
+    comp = c1.text_input("Employer / Company")
+    work = c2.text_input("Employee / Partner")
+    
+    if "Employment" in doc_type or "Еңбек" in doc_type or "Трудовой" in doc_type:
+        val1 = c1.text_input("Position")
+        val2 = c2.text_input("Salary (KZT)")
+    elif "NDA" in doc_type:
+        val1 = c1.text_input("Duration (Years)", "5")
+        val2 = c2.text_input("Penalty Fine (KZT)", "1,000,000")
+    else:
+        val1 = c1.text_input("Service Title")
+        val2 = c2.text_input("Price / Deadline")
 
-    if submitted:
-        if comp and work:
-            with st.spinner("Дайындалуда..."):
-                time.sleep(1)
-            
-            if doc_type == "Еңбек шарты":
-                title, content = "ЕҢБЕК ШАРТЫ", f"<p>{comp} мекемесі {work}-ны {pos} қызметіне {sal} теңге жалақымен қабылдайды.</p>"
-            elif doc_type == "NDA (Құпиялылық)":
-                title, content = "ҚҰПИЯЛЫЛЫҚ ТУРАЛЫ КЕЛІСІМ", f"<p>{work} {comp} мекемесінің құпияларын {term} жыл сақтауға міндетті. Айыппұл: {fine} теңге.</p>"
-            else:
-                title, content = "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", f"<p>Орындаушы {work} Тапсырыс беруші {comp} үшін '{service}' жұмысын {price} теңгеге орындайды.</p>"
+    submitted = st.form_submit_button(btn_text)
 
-            html_doc_kz = f"<html><body style='font-family:Arial;'><h1>{title}</h1><p>Күні: {date.today()}</p>{content}<br><p>Қолы: ________</p></body></html>"
-            st.success("✅ Дайын!")
-            st.download_button("📥 Жүктеу .DOC", html_doc_kz, f"{doc_type}_{work}.doc")
+# ===== PROCESSING & OUTPUT =====
+if submitted:
+    if comp and work:
+        with st.spinner("AI is analyzing and generating..."):
+            time.sleep(1.5)
+        
+        # 4. ФУНКЦИЯ AI SUMMARY (ИНСАЙТЫ)
+        st.markdown(f"""<div class="ai-box">
+            <h4 style="margin-top:0;">{summary_title}</h4>
+            <p>• <b>Parties:</b> {comp} & {work}</p>
+            <p>• <b>Key Terms:</b> {val1}, {val2}</p>
+            <p>• <b>Status:</b> Legally structured for Google Docs.</p>
+        </div>""", unsafe_allow_html=True)
 
-# ===== FOOTER =====
-st.markdown('<div class="footer-text">Made by Yeraly and Ramazan</div>', unsafe_allow_html=True)
+        # Контент для скачивания
+        html_content = f"<html><body style='font-family:Arial;'><h1>{doc_type.upper()}</h1><p>Date: {date.today()}</p><p><b>Party A:</b> {comp}</p><p><b>Party B:</b> {work}</p><p><b>Details:</b> {val1}, {val2}</p></body></html>"
+        
+        st.success("Success!")
+        st.download_button("📥 Download for Google Docs", html_content, f"EasyDoc_{work}.doc")
+
+# ===== 5. ПРОФЕССИОНАЛЬНЫЙ ФУТЕР =====
+st.markdown(f"""
+<div class="footer-container">
+    <p>EasyDoc AI — Automating Business Documentation</p>
+    <p>Developed by Team: <span class="footer-team">Yeraly & Ramazan</span></p>
+    <p style="font-size: 0.8rem;">Hackathon 2026 | Astana, Kazakhstan</p>
+</div>
+""", unsafe_allow_html=True)
