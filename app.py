@@ -1,366 +1,831 @@
-import streamlit as st
-import time
-from datetime import datetime
-import os
-import pytz
-from docx import Document
-from docx.shared import Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from io import BytesIO
-import streamlit.components.v1 as components
+============================================================
+📄 src/index.css
+============================================================
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-# ===== 1. НАСТРОЙКИ СТРАНИЦЫ =====
-st.set_page_config(page_title="EasyDoc AI", page_icon="📝", layout="wide")
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-if 'page' not in st.session_state:
-    st.session_state.page = "Главная"
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
 
-def nav_to(page_name):
-    st.session_state.page = page_name
-    st.rerun()
+    --card: 222 40% 10%;
+    --card-foreground: 210 40% 96%;
 
-# ===== 2. БОЛЬШОЙ СЛОВАРЬ ДЛЯ ПЕРЕВОДА ВСЕГО ИНТЕРФЕЙСА И ДОКУМЕНТОВ =====
-translations = {
-    "Русский": {
-        "nav": {"Главная": "Главная", "Генератор": "Генератор", "Отзывы": "Отзывы", "Авторы": "Авторы"},
-        "subtitle": "Ваш надежный ИИ-помощник для малого бизнеса.",
-        "run_btn": "ЗАПУСТИТЬ ГЕНЕРАТОР",
-        "date": "Дата", "time": "Время", "nav_title": "Навигация",
-        "gen_header": "Настройка шаблона", "doc_type": "Выберите тип документа:",
-        "submit": "СОЗДАТЬ ДОКУМЕНТ", "download": "📥 СКАЧАТЬ WORD (.DOCX)",
-        "feedback": "Обратная связь", "name": "Имя", "review": "Ваш отзыв", "send": "Отправить", "thanks": "Спасибо за отзыв!",
-        "authors": "Авторы проекта", "address_lbl": "Юридические адреса и реквизиты сторон",
-        "city": "г. Астана",
-        "docs": {
-            "labor": "Трудовой договор (Двуязычный Каз/Рус)",
-            "prop": "Договор купли-продажи движимого имущества",
-            "rent": "Договор аренды помещения",
-            "serv": "Договор об оказании услуг",
-            "car": "Договор купли-продажи транспортного средства"
-        },
-        "fields": {
-            "p1_labor": "Работодатель (Наименование компании и БИН)",
-            "p2_labor": "Работник (ФИО, ИИН и номер удостоверения)",
-            "p1_prop": "Продавец (ФИО/Компания, ИИН/БИН)",
-            "p2_prop": "Покупатель (ФИО/Компания, ИИН/БИН)",
-            "p1_rent": "Арендодатель (ФИО/Компания, ИИН/БИН)",
-            "p2_rent": "Арендатор (ФИО/Компания, ИИН/БИН)",
-            "p1_serv": "Заказчик (ФИО/Компания, ИИН/БИН)",
-            "p2_serv": "Исполнитель (ФИО/Компания, ИИН/БИН)",
-            "p1_car": "Продавец ТС (ФИО, ИИН, адрес)",
-            "p2_car": "Покупатель ТС (ФИО, ИИН, адрес)",
-            "labor_pos": "Должность работника", "labor_salary": "Размер оклада (в тенге)", "labor_term": "Срок договора (например, на 1 год)",
-            "prop_name": "Наименование и описание имущества", "prop_price": "Стоимость имущества", "prop_term": "Срок передачи имущества",
-            "rent_addr": "Точный адрес и площадь помещения", "rent_price": "Арендная плата в месяц", "rent_term": "Срок аренды",
-            "serv_desc": "Описание оказываемых услуг", "serv_price": "Стоимость услуг", "serv_term": "Сроки оказания услуг",
-            "car_desc": "Марка, модель и год выпуска авто", "car_price": "Стоимость автомобиля", "car_id": "Гос. номер и VIN код"
-        }
-    },
-    "English": {
-        "nav": {"Главная": "Home", "Генератор": "Generator", "Отзывы": "Feedback", "Авторы": "Authors"},
-        "subtitle": "Your reliable AI assistant for small businesses.",
-        "run_btn": "LAUNCH GENERATOR",
-        "date": "Date", "time": "Time", "nav_title": "Navigation",
-        "gen_header": "Template Setup", "doc_type": "Select document type:",
-        "submit": "CREATE DOCUMENT", "download": "📥 DOWNLOAD WORD (.DOCX)",
-        "feedback": "Feedback", "name": "Name", "review": "Your review", "send": "Submit", "thanks": "Thank you for your feedback!",
-        "authors": "Project Authors", "address_lbl": "Legal addresses and bank details",
-        "city": "Astana city",
-        "docs": {
-            "labor": "Labor Contract (Bilingual Kaz/Rus)",
-            "prop": "Moveable Property Sale Agreement",
-            "rent": "Lease Agreement",
-            "serv": "Services Agreement",
-            "car": "Vehicle Sale Agreement"
-        },
-        "fields": {
-            "p1_labor": "Employer (Company Name & BIN)",
-            "p2_labor": "Employee (Full Name, IIN & ID Number)",
-            "p1_prop": "Seller (Full Name/Company, IIN/BIN)",
-            "p2_prop": "Buyer (Full Name/Company, IIN/BIN)",
-            "p1_rent": "Landlord (Full Name/Company, IIN/BIN)",
-            "p2_rent": "Tenant (Full Name/Company, IIN/BIN)",
-            "p1_serv": "Customer (Full Name/Company, IIN/BIN)",
-            "p2_serv": "Contractor (Full Name/Company, IIN/BIN)",
-            "p1_car": "Vehicle Seller (Name, IIN, Address)",
-            "p2_car": "Vehicle Buyer (Name, IIN, Address)",
-            "labor_pos": "Employee's Position", "labor_salary": "Salary amount (in KZT)", "labor_term": "Contract term (e.g., for 1 year)",
-            "prop_name": "Name and description of the property", "prop_price": "Property cost", "prop_term": "Transfer deadline",
-            "rent_addr": "Exact address and area of the premises", "rent_price": "Monthly rent payment", "rent_term": "Lease term",
-            "serv_desc": "Description of services rendered", "serv_price": "Cost of services", "serv_term": "Deadlines for services",
-            "car_desc": "Make, model and year of the car", "car_price": "Car cost", "car_id": "State number and VIN code"
-        }
-    },
-    "Қазақша": {
-        "nav": {"Главная": "Басты бет", "Генератор": "Генератор", "Отзывы": "Пікірлер", "Авторы": "Авторлар"},
-        "subtitle": "Шағын бизнеске арналған сенімді AI көмекшісі.",
-        "run_btn": "ГЕНЕРАТОРДЫ ІСКЕ ҚОСУ",
-        "date": "Күні", "time": "Уақыты", "nav_title": "Навигация",
-        "gen_header": "Үлгіні баптау", "doc_type": "Құжат түрін таңдаңыз:",
-        "submit": "ҚҰЖАТТЫ ҚҰРУ", "download": "📥 WORD ЖҮКТЕУ (.DOCX)",
-        "feedback": "Кері байланыс", "name": "Атыңыз", "review": "Пікіріңіз", "send": "Жіберу", "thanks": "Пікіріңіз үшін рахмет!",
-        "authors": "Жоба авторлары", "address_lbl": "Тараптардың заңды мекенжайлары мен деректемелері",
-        "city": "Астана қ.",
-        "docs": {
-            "labor": "Еңбек шарты (Екі тілде Қаз/Орыс)",
-            "prop": "Жылжымалы мүлікті сатып алу-сату шарты",
-            "rent": "Үй-жайды жалдау шарты",
-            "serv": "Қызмет көрсету шарты",
-            "car": "Көлік құралын сатып алу-сату шарты"
-        },
-        "fields": {
-            "p1_labor": "Жұмыс беруші (Компания атауы және БСН)",
-            "p2_labor": "Жұмыскер (ТАӘ, ЖСН және куәлік нөмірі)",
-            "p1_prop": "Сатушы (ТАӘ/Компания, ЖСН/БСН)",
-            "p2_prop": "Сатып алушы (ТАӘ/Компания, ЖСН/БСН)",
-            "p1_rent": "Жалға беруші (ТАӘ/Компания, ЖСН/БСН)",
-            "p2_rent": "Жалға алушы (ТАӘ/Компания, ЖСН/БСН)",
-            "p1_serv": "Тапсырыс беруші (ТАӘ/Компания, ЖСН/БСН)",
-            "p2_serv": "Орындаушы (ТАӘ/Компания, ЖСН/БСН)",
-            "p1_car": "Көлік сатушысы (ТАӘ, ЖСН, мекенжайы)",
-            "p2_car": "Көлік сатып алушысы (ТАӘ, ЖСН, мекенжайы)",
-            "labor_pos": "Қызметкердің лауазымы", "labor_salary": "Жалақы мөлшері (теңгемен)", "labor_term": "Шарт мерзімі (мысалы, 1 жылға)",
-            "prop_name": "Мүліктің атауы мен сипаттамасы", "prop_price": "Мүліктің құны", "prop_term": "Мүлікті тапсыру мерзімі",
-            "rent_addr": "Үй-жайдың нақты мекенжайы мен ауданы", "rent_price": "Айлық жалдау ақысы", "rent_term": "Жалға алу мерзімі",
-            "serv_desc": "Көрсетілетін қызметтердің сипаттамасы", "serv_price": "Қызметтердің құны", "serv_term": "Қызмет көрсету мерзімдері",
-            "car_desc": "Автокөліктің маркасы, моделі және шыққан жылы", "car_price": "Автокөліктің құны", "car_id": "Мемлекеттік нөмірі және VIN коды"
-        }
-    }
+    --popover: 222 40% 10%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 30% 16%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 239 84% 67%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 222 40% 8%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 30% 14%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 30% 18%;
+    --sidebar-ring: 239 84% 67%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(260 84% 60%));
+    --gradient-card: linear-gradient(135deg, hsl(222 40% 10%), hsl(222 30% 14%));
+    --shadow-glow: 0 0 30px hsl(239 84% 67% / 0.15);
+  }
 }
 
-# ===== 3. ДИЗАЙН (CSS) =====
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
-    .stApp { background-color: #090e1a; color: #f1f5f9; font-family: 'Inter', sans-serif; }
-    .main-title { font-size: 3.5rem; font-weight: 800; text-align: center; color: white; margin-bottom: 0px; }
-    .main-sub { text-align: center; font-size: 1.4rem; color: #94a3b8; margin-bottom: 2rem; }
-    .doc-preview { 
-        background: white; color: black !important; padding: 40px; 
-        font-family: 'Times New Roman', serif; border: 1px solid #ccc;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.5); line-height: 1.5;
-    }
-    .doc-preview p, .doc-preview div, .doc-preview b, .doc-preview h3, .doc-preview span { color: black !important; }
-    .ai-sidebar { background: rgba(99, 102, 241, 0.1); border: 1px solid #6366f1; padding: 20px; border-radius: 15px; }
-    .feedback-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #6366f1; }
-</style>
-""", unsafe_allow_html=True)
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
 
-# ===== 4. ГЕНЕРАЦИЯ WORD В ЗАВИСИМОСТИ ОТ ЯЗЫКА =====
-def create_docx(doc_id, data, lang):
-    doc = Document()
-    date_str = datetime.now().strftime('%d.%m.%Y')
-    
-    # Задаем язык самого шаблона в зависимости от выбранного
-    if doc_id == "labor":
-        heading = doc.add_heading("ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР", 1)
-        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        p = doc.add_paragraph()
-        p.add_run(f"Астана қ. / г. Астана \t\t\t\t\t\t\t {date_str} ж/г.")
-        
-        p2 = doc.add_paragraph()
-        p2.add_run(f"\nРаботодатель / Жұмыс беруші: {data.get('p1')}\nРаботник / Жұмыскер: {data.get('p2')}\n\n")
-        p2.add_run("Стороны заключили настоящий договор / Тараптар осы шартты жасасты:\n").bold = True
-        
-        doc.add_heading('1. Предмет / Шарттың мәні', level=2)
-        doc.add_paragraph(f"Принять на работу на должность / Жұмысқа қабылдау лауазымы: {data.get('d1')}")
-        
-        doc.add_heading('2. Оплата и Сроки / Төлем және Мерзімдері', level=2)
-        doc.add_paragraph(f"Оклад составляет / Жалақы мөлшері: {data.get('d2')} KZT.")
-        doc.add_paragraph(f"Срок действия / Қолданылу мерзімі: {data.get('d3')}.")
+@layer utilities {
+  .page-transition {
+    @apply animate-fade-in;
+  }
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl;
+    box-shadow: var(--shadow-glow);
+  }
+  .glow-border {
+    @apply border border-primary/30;
+    box-shadow: 0 0 20px hsl(239 84% 67% / 0.1), inset 0 0 20px hsl(239 84% 67% / 0.05);
+  }
+}
 
-    else:
-        # Для остальных документов переводим саму структуру на выбранный язык
-        titles = {
-            "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ", "rent": "ДОГОВОР АРЕНДЫ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТС"},
-            "English": {"prop": "SALE AND PURCHASE AGREEMENT", "rent": "LEASE AGREEMENT", "serv": "SERVICES AGREEMENT", "car": "VEHICLE SALE AGREEMENT"},
-            "Қазақша": {"prop": "САТЫП АЛУ-САТУ ШАРТЫ", "rent": "ЖАЛДАУ ШАРТЫ", "serv": "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", "car": "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ"}
-        }
-        
-        doc_heading = titles[lang][doc_id]
-        heading = doc.add_heading(doc_heading, 1)
-        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        city = translations[lang]["city"]
-        p = doc.add_paragraph()
-        p.add_run(f"{city} \t\t\t\t\t\t\t {date_str}")
-        
-        # Названия ролей для преамбулы
-        roles = {
-            "Русский": {"prop": ("Продавец", "Покупатель"), "rent": ("Арендодатель", "Арендатор"), "serv": ("Заказчик", "Исполнитель"), "car": ("Продавец", "Покупатель")},
-            "English": {"prop": ("Seller", "Buyer"), "rent": ("Landlord", "Tenant"), "serv": ("Customer", "Contractor"), "car": ("Seller", "Buyer")},
-            "Қазақша": {"prop": ("Сатушы", "Сатып алушы"), "rent": ("Жалға беруші", "Жалға алушы"), "serv": ("Тапсырыс беруші", "Орындаушы"), "car": ("Сатушы", "Сатып алушы")}
-        }
-        r1, r2 = roles[lang][doc_id]
-        
-        # Преамбула на выбранном языке
-        p2 = doc.add_paragraph()
-        if lang == "Русский":
-            p2.add_run(f"\n{data.get('p1')} (далее - {r1}), с одной стороны, и {data.get('p2')} (далее - {r2}), с другой стороны, заключили настоящий договор о нижеследующем:\n")
-        elif lang == "English":
-            p2.add_run(f"\n{data.get('p1')} (hereinafter - {r1}), on the one part, and {data.get('p2')} (hereinafter - {r2}), on the other part, have concluded this agreement as follows:\n")
-        else:
-            p2.add_run(f"\nБір тараптан {data.get('p1')} (бұдан әрі - {r1}), және екінші тараптан {data.get('p2')} (бұдан әрі - {r2}), төмендегілер туралы осы шартты жасасты:\n")
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-        # Разделы на выбранном языке
-        secs = {
-            "Русский": ["1. ПРЕДМЕТ ДОГОВОРА", "2. ФИНАНСОВЫЕ УСЛОВИЯ И СРОКИ", "3. АДРЕСА И РЕКВИЗИТЫ СТОРОН"],
-            "English": ["1. SUBJECT OF THE AGREEMENT", "2. FINANCIAL CONDITIONS AND TERMS", "3. ADDRESSES AND DETAILS OF THE PARTIES"],
-            "Қазақша": ["1. ШАРТТЫҢ МӘНІ", "2. ҚАРЖЫЛЫҚ ШАРТТАР МЕН МЕРЗІМДЕР", "3. ТАРАПТАРДЫҢ МЕКЕНЖАЙЛАРЫ МЕН ДЕРЕКТЕМЕЛЕРІ"]
-        }
-        
-        doc.add_heading(secs[lang][0], level=2)
-        doc.add_paragraph(f"{data.get('d1')}")
-        
-        doc.add_heading(secs[lang][1], level=2)
-        doc.add_paragraph(f"{data.get('d2')}")
-        doc.add_paragraph(f"{data.get('d3')}")
-        
-        doc.add_heading(secs[lang][2], level=2)
-        doc.add_paragraph(f"{data.get('addr')}")
-        
-    buffer = BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-# ===== 5. SIDEBAR И ЧАСЫ =====
-tz = pytz.timezone('Asia/Almaty')
-now = datetime.now(tz)
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
 
-with st.sidebar:
-    st.title("EasyDoc AI")
-    selected_lang = st.selectbox("🌐 Язык / Language", ["Русский", "English", "Қазақша"])
-    t = translations[selected_lang]
-    
-    st.divider()
-    st.write(f"📅 **{t['date']}:** {now.strftime('%d.%m.%Y')}")
-    
-    # LIVE CLOCK С ПОМОЩЬЮ HTML/JS КОМПОНЕНТА
-    clock_html = f"""
-    <div style="font-family: 'Inter', sans-serif; color: #f1f5f9; font-size: 1rem; margin-bottom: 1rem;">
-        🕒 <b>{t['time']}:</b> <span id="live-clock"></span>
+
+============================================================
+📄 tailwind.config.ts
+============================================================
+import type { Config } from "tailwindcss";
+
+export default {
+  darkMode: ["class"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(30px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.5s ease-out both",
+        "slide-up": "slide-up 0.6s ease-out both",
+        "float": "float 3s ease-in-out infinite",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;
+
+
+============================================================
+📄 src/main.tsx
+============================================================
+import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(<App />);
+
+
+============================================================
+📄 src/App.tsx
+============================================================
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { LangProvider } from "@/lib/LangContext";
+import Sidebar from "@/components/Sidebar";
+import HomePage from "@/pages/HomePage";
+import GeneratorPage from "@/pages/GeneratorPage";
+import FeedbackPage from "@/pages/FeedbackPage";
+import AuthorsPage from "@/pages/AuthorsPage";
+import NotFound from "@/pages/NotFound";
+
+const App = () => (
+  <LangProvider>
+    <BrowserRouter>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="flex-1 ml-64">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/generator" element={<GeneratorPage />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/authors" element={<AuthorsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  </LangProvider>
+);
+
+export default App;
+
+
+============================================================
+📄 src/lib/translations.ts
+============================================================
+export type Lang = "Русский" | "English" | "Қазақша";
+export type PageKey = "home" | "generator" | "feedback" | "authors";
+
+export const translations: Record<Lang, Record<string, any>> = {
+  "Русский": {
+    nav: { home: "Главная", generator: "Генератор", feedback: "Отзывы", authors: "Авторы" },
+    subtitle: "Ваш надежный ИИ-помощник для малого бизнеса.",
+    runBtn: "ЗАПУСТИТЬ ГЕНЕРАТОР",
+    genHeader: "Настройка шаблона",
+    docType: "Выберите тип документа:",
+    address: "Юридические адреса, контакты и банковские реквизиты сторон (IBAN, Банк)",
+    submit: "СОЗДАТЬ ДОКУМЕНТ",
+    download: "📥 СКАЧАТЬ WORD (.DOCX)",
+    feedbackTitle: "Обратная связь",
+    name: "Имя",
+    review: "Ваш отзыв",
+    send: "Отправить",
+    thanks: "Спасибо за отзыв!",
+    authors: "Авторы проекта",
+    city: "г. Астана",
+    docs: {
+      labor: "Трудовой договор (Двуязычный Каз/Рус)",
+      prop: "Договор купли-продажи имущества",
+      rent: "Договор аренды помещения",
+      serv: "Договор об оказании услуг",
+      car: "Договор купли-продажи ТС (Авто)",
+    },
+    fields: {
+      p1_labor: "Работодатель (Название + БИН)", p2_labor: "Работник (ФИО + ИИН)",
+      p1_prop: "Продавец (ФИО/Организация)", p2_prop: "Покупатель (ФИО/Организация)",
+      p1_rent: "Арендодатель (ФИО/Организация)", p2_rent: "Арендатор (ФИО/Организация)",
+      p1_serv: "Заказчик (ФИО/Организация)", p2_serv: "Исполнитель (ФИО/Организация)",
+      p1_car: "Продавец ТС (ФИО + ИИН)", p2_car: "Покупатель ТС (ФИО + ИИН)",
+      d1_labor: "Должность работника", d2_labor: "Оклад (цифрами и прописью)", d3_labor: "Срок договора",
+      d1_prop: "Описание имущества", d2_prop: "Стоимость имущества", d3_prop: "Срок передачи",
+      d1_rent: "Адрес помещения", d2_rent: "Арендная плата", d3_rent: "Срок аренды",
+      d1_serv: "Описание услуг", d2_serv: "Сумма договора", d3_serv: "Срок оказания",
+      d1_car: "Марка, Модель, Год", d2_car: "Цена авто", d3_car: "Гос. номер и VIN код",
+    },
+  },
+  "English": {
+    nav: { home: "Home", generator: "Generator", feedback: "Feedback", authors: "Authors" },
+    subtitle: "Your reliable AI assistant for small businesses.",
+    runBtn: "LAUNCH GENERATOR",
+    genHeader: "Template Setup",
+    docType: "Select document type:",
+    address: "Legal addresses, contacts and bank details (IBAN, Bank)",
+    submit: "CREATE DOCUMENT",
+    download: "📥 DOWNLOAD WORD (.DOCX)",
+    feedbackTitle: "Feedback",
+    name: "Name",
+    review: "Your review",
+    send: "Submit",
+    thanks: "Thank you for your feedback!",
+    authors: "Project Authors",
+    city: "Astana city",
+    docs: {
+      labor: "Labor Contract (Bilingual Kaz/Rus)",
+      prop: "Property Sale Agreement",
+      rent: "Lease Agreement",
+      serv: "Services Agreement",
+      car: "Vehicle Sale Agreement",
+    },
+    fields: {
+      p1_labor: "Employer (Company Name + BIN)", p2_labor: "Employee (Name + IIN)",
+      p1_prop: "Seller (Name/Company)", p2_prop: "Buyer (Name/Company)",
+      p1_rent: "Landlord (Name/Company)", p2_rent: "Tenant (Name/Company)",
+      p1_serv: "Customer (Name/Company)", p2_serv: "Contractor (Name/Company)",
+      p1_car: "Seller (Name + IIN)", p2_car: "Buyer (Name + IIN)",
+      d1_labor: "Employee Position", d2_labor: "Salary (in words and figures)", d3_labor: "Contract term",
+      d1_prop: "Property description", d2_prop: "Property cost", d3_prop: "Transfer deadline",
+      d1_rent: "Premises address", d2_rent: "Monthly rent", d3_rent: "Lease term",
+      d1_serv: "Services description", d2_serv: "Contract amount", d3_serv: "Deadline",
+      d1_car: "Make, Model, Year", d2_car: "Car price", d3_car: "Plate number & VIN",
+    },
+  },
+  "Қазақша": {
+    nav: { home: "Басты бет", generator: "Генератор", feedback: "Пікірлер", authors: "Авторлар" },
+    subtitle: "Шағын бизнеске арналған сенімді AI көмекшісі.",
+    runBtn: "ГЕНЕРАТОРДЫ ІСКЕ ҚОСУ",
+    genHeader: "Үлгіні баптау",
+    docType: "Құжат түрін таңдаңыз:",
+    address: "Заңды мекенжайлар, байланыстар және банк деректемелері (IBAN, Банк)",
+    submit: "ҚҰЖАТТЫ ҚҰРУ",
+    download: "📥 WORD ЖҮКТЕУ (.DOCX)",
+    feedbackTitle: "Кері байланыс",
+    name: "Атыңыз",
+    review: "Пікіріңіз",
+    send: "Жіберу",
+    thanks: "Пікіріңіз үшін рахмет!",
+    authors: "Жоба авторлары",
+    city: "Астана қ.",
+    docs: {
+      labor: "Еңбек шарты (Екі тілде Қаз/Орыс)",
+      prop: "Сатып алу-сату шарты",
+      rent: "Жалдау шарты",
+      serv: "Қызмет көрсету шарты",
+      car: "Көлік құралын сатып алу-сату шарты",
+    },
+    fields: {
+      p1_labor: "Жұмыс беруші (Атауы + БСН)", p2_labor: "Жұмыскер (ТАӘ + ЖСН)",
+      p1_prop: "Сатушы (ТАӘ/Ұйым)", p2_prop: "Сатып алушы (ТАӘ/Ұйым)",
+      p1_rent: "Жалға беруші (ТАӘ/Ұйым)", p2_rent: "Жалға алушы (ТАӘ/Ұйым)",
+      p1_serv: "Тапсырыс беруші (ТАӘ/Ұйым)", p2_serv: "Орындаушы (ТАӘ/Ұйым)",
+      p1_car: "Көлік сатушысы (ТАӘ + ЖСН)", p2_car: "Көлік сатып алушысы (ТАӘ + ЖСН)",
+      d1_labor: "Қызметкердің лауазымы", d2_labor: "Жалақы мөлшері", d3_labor: "Шарт мерзімі",
+      d1_prop: "Мүліктің сипаттамасы", d2_prop: "Мүліктің құны", d3_prop: "Тапсыру мерзімі",
+      d1_rent: "Үй-жайдың мекенжайы", d2_rent: "Жалдау ақысы", d3_rent: "Жалдау мерзімі",
+      d1_serv: "Қызметтердің сипаттамасы", d2_serv: "Шарт сомасы", d3_serv: "Мерзімі",
+      d1_car: "Маркасы, Моделі, Жылы", d2_car: "Көлік құны", d3_car: "Мемлекеттік нөмір және VIN",
+    },
+  },
+};
+
+
+============================================================
+📄 src/lib/docx-generator.ts
+============================================================
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import type { Lang } from "./translations";
+
+export interface DocData {
+  p1: string;
+  p2: string;
+  d1: string;
+  d2: string;
+  d3: string;
+  addr: string;
+}
+
+const titles: Record<Lang, Record<string, string>> = {
+  "Русский": { prop: "ДОГОВОР КУПЛИ-ПРОДАЖИ", rent: "ДОГОВОР АРЕНДЫ", serv: "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", car: "ДОГОВОР КУПЛИ-ПРОДАЖИ ТС" },
+  "English": { prop: "SALE AND PURCHASE AGREEMENT", rent: "LEASE AGREEMENT", serv: "SERVICES AGREEMENT", car: "VEHICLE SALE AGREEMENT" },
+  "Қазақша": { prop: "САТЫП АЛУ-САТУ ШАРТЫ", rent: "ЖАЛДАУ ШАРТЫ", serv: "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", car: "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ" },
+};
+
+const roles: Record<Lang, Record<string, [string, string]>> = {
+  "Русский": { prop: ["Продавец", "Покупатель"], rent: ["Арендодатель", "Арендатор"], serv: ["Заказчик", "Исполнитель"], car: ["Продавец", "Покупатель"] },
+  "English": { prop: ["Seller", "Buyer"], rent: ["Landlord", "Tenant"], serv: ["Customer", "Contractor"], car: ["Seller", "Buyer"] },
+  "Қазақша": { prop: ["Сатушы", "Сатып алушы"], rent: ["Жалға беруші", "Жалға алушы"], serv: ["Тапсырыс беруші", "Орындаушы"], car: ["Сатушы", "Сатып алушы"] },
+};
+
+const cityNames: Record<Lang, string> = { "Русский": "г. Астана", "English": "Astana city", "Қазақша": "Астана қ." };
+
+function introText(lang: Lang, docId: string, data: DocData): string {
+  const [r1, r2] = roles[lang][docId];
+  if (lang === "Русский") return `${data.p1} (далее - ${r1}), с одной стороны, и ${data.p2} (далее - ${r2}), с другой стороны, заключили настоящий договор о нижеследующем:`;
+  if (lang === "English") return `${data.p1} (hereinafter - ${r1}), on the one part, and ${data.p2} (hereinafter - ${r2}), on the other part, have concluded this agreement as follows:`;
+  return `Бір тараптан ${data.p1} (бұдан әрі - ${r1}), және екінші тараптан ${data.p2} (бұдан әрі - ${r2}), осы шартты жасасты:`;
+}
+
+export async function createDocx(docId: string, data: DocData, lang: Lang): Promise<Blob> {
+  const dateStr = new Date().toLocaleDateString("ru-RU");
+  const children: Paragraph[] = [];
+
+  if (docId === "labor") {
+    children.push(
+      new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, children: [new TextRun({ text: "ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР", bold: true })] }),
+      new Paragraph({ children: [new TextRun(`Астана қ. / г. Астана\t\t\t\t${dateStr} ж/г.`)] }),
+      new Paragraph({ children: [new TextRun(`\nРаботодатель / Жұмыс беруші: ${data.p1}\nРаботник / Жұмыскер: ${data.p2}`)] }),
+      new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("1. Предмет / Шарттың мәні")] }),
+      new Paragraph({ children: [new TextRun(`Принять на работу на должность / Лауазымы: ${data.d1}`)] }),
+      new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("2. Оплата и Сроки / Төлем және Мерзімдері")] }),
+      new Paragraph({ children: [new TextRun(`Оклад / Жалақы: ${data.d2} KZT.\nСрок / Мерзімі: ${data.d3}`)] }),
+    );
+  } else {
+    children.push(
+      new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, children: [new TextRun({ text: titles[lang][docId], bold: true })] }),
+      new Paragraph({ children: [new TextRun(`${cityNames[lang]}\t\t\t\t${dateStr}`)] }),
+      new Paragraph({ spacing: { before: 200 }, children: [new TextRun(introText(lang, docId, data))] }),
+      new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("1.")] }),
+      new Paragraph({ children: [new TextRun(data.d1)] }),
+      new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("2.")] }),
+      new Paragraph({ children: [new TextRun(`${data.d2}\n${data.d3}`)] }),
+      new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("3.")] }),
+      new Paragraph({ children: [new TextRun(data.addr)] }),
+    );
+  }
+
+  const doc = new Document({
+    sections: [{ properties: {}, children }],
+  });
+
+  return await Packer.toBlob(doc);
+}
+
+
+============================================================
+📄 src/lib/LangContext.tsx
+============================================================
+import { createContext, useContext, useState, type ReactNode } from "react";
+import type { Lang } from "./translations";
+import { translations } from "./translations";
+
+interface LangCtx {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: Record<string, any>;
+}
+
+const Ctx = createContext<LangCtx>(null!);
+
+export function LangProvider({ children }: { children: ReactNode }) {
+  const [lang, setLang] = useState<Lang>("Русский");
+  return <Ctx.Provider value={{ lang, setLang, t: translations[lang] }}>{children}</Ctx.Provider>;
+}
+
+export const useLang = () => useContext(Ctx);
+
+
+============================================================
+📄 src/components/Sidebar.tsx
+============================================================
+import { useLocation, useNavigate } from "react-router-dom";
+import { useLang } from "@/lib/LangContext";
+import type { Lang } from "@/lib/translations";
+import { FileText, Home, MessageSquare, Users, Globe } from "lucide-react";
+
+const langs: Lang[] = ["Русский", "English", "Қазақша"];
+
+const navItems = [
+  { key: "home", path: "/", icon: Home },
+  { key: "generator", path: "/generator", icon: FileText },
+  { key: "feedback", path: "/feedback", icon: MessageSquare },
+  { key: "authors", path: "/authors", icon: Users },
+] as const;
+
+export default function Sidebar() {
+  const { lang, setLang, t } = useLang();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const now = new Date();
+
+  return (
+    <aside className="fixed left-0 top-0 h-full w-64 bg-card/60 backdrop-blur-xl border-r border-border/50 flex flex-col z-50">
+      <div className="p-6 border-b border-border/50">
+        <h1 className="text-xl font-bold text-foreground tracking-tight">📝 EasyDoc AI</h1>
+        <p className="text-xs text-muted-foreground mt-1">{now.toLocaleDateString("ru-RU")}</p>
+      </div>
+
+      <div className="px-4 py-3 border-b border-border/50">
+        <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
+          <Globe className="w-3 h-3" /> Language
+        </div>
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as Lang)}
+          className="w-full bg-secondary text-foreground text-sm rounded-lg px-3 py-2 border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          {langs.map((l) => (
+            <option key={l} value={l}>{l}</option>
+          ))}
+        </select>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {navItems.map(({ key, path, icon: Icon }) => {
+          const active = location.pathname === path;
+          return (
+            <button
+              key={key}
+              onClick={() => navigate(path)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                active
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {t.nav[key]}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="p-4 border-t border-border/50 text-xs text-muted-foreground text-center">
+        EasyDoc AI © {now.getFullYear()} | Astana
+      </div>
+    </aside>
+  );
+}
+
+
+============================================================
+📄 src/pages/HomePage.tsx
+============================================================
+import { useNavigate } from "react-router-dom";
+import { useLang } from "@/lib/LangContext";
+import { ArrowRight, FileText, Zap, Globe } from "lucide-react";
+
+export default function HomePage() {
+  const { t } = useLang();
+  const navigate = useNavigate();
+
+  const features = [
+    { icon: FileText, title: "5 типов", desc: "договоров" },
+    { icon: Globe, title: "3 языка", desc: "RU / EN / KZ" },
+    { icon: Zap, title: "Мгновенно", desc: "генерация DOCX" },
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 page-transition">
+      <div className="text-center max-w-2xl" style={{ animationDelay: "0.1s" }}>
+        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-medium px-4 py-2 rounded-full mb-8 animate-fade-in">
+          <Zap className="w-4 h-4" /> EasyDoc AI
+        </div>
+
+        <h1 className="text-5xl md:text-6xl font-extrabold text-foreground leading-tight animate-fade-in" style={{ animationDelay: "0.15s" }}>
+          EasyDoc <span className="text-primary">AI</span>
+        </h1>
+
+        <p className="text-lg text-muted-foreground mt-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+          {t.subtitle}
+        </p>
+
+        <button
+          onClick={() => navigate("/generator")}
+          className="mt-8 inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-semibold text-base hover:brightness-110 transition-all duration-200 hover:scale-105 animate-fade-in"
+          style={{ animationDelay: "0.35s" }}
+        >
+          {t.runBtn}
+          <ArrowRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 mt-16 max-w-lg w-full animate-fade-in" style={{ animationDelay: "0.45s" }}>
+        {features.map((f, i) => (
+          <div key={i} className="glass-card p-5 text-center">
+            <f.icon className="w-6 h-6 text-primary mx-auto mb-2" />
+            <p className="text-foreground font-semibold text-sm">{f.title}</p>
+            <p className="text-muted-foreground text-xs">{f.desc}</p>
+          </div>
+        ))}
+      </div>
     </div>
-    <script>
-        function updateClock() {{
-            const date = new Date();
-            const timeString = date.toLocaleTimeString('ru-RU', {{timeZone: 'Asia/Almaty'}});
-            document.getElementById('live-clock').innerText = timeString;
-        }}
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
-    """
-    components.html(clock_html, height=30)
-    
-    # Навигация с переводом
-    menu_keys = ["Главная", "Генератор", "Отзывы", "Авторы"]
-    menu_labels = [t["nav"][k] for k in menu_keys]
-    
-    selected_label = st.radio(t["nav_title"], menu_labels, index=menu_keys.index(st.session_state.page))
-    st.session_state.page = menu_keys[menu_labels.index(selected_label)]
+  );
+}
 
-# ===== 6. КОНТЕНТ ПО СТРАНИЦАМ =====
 
-if st.session_state.page == "Главная":
-    st.markdown("<div class='main-title'>EasyDoc AI</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='main-sub'>{t['subtitle']}</div>", unsafe_allow_html=True)
-    
-    if os.path.exists("logo.png"): 
-        st.image("logo.png", use_container_width=True)
-        
-    st.divider()
-    col_l, col_m, col_r = st.columns([1,2,1])
-    if col_m.button(t["run_btn"], use_container_width=True): 
-        nav_to("Генератор")
+============================================================
+📄 src/pages/GeneratorPage.tsx
+============================================================
+import { useState } from "react";
+import { useLang } from "@/lib/LangContext";
+import { createDocx, type DocData } from "@/lib/docx-generator";
+import { Download, Sparkles } from "lucide-react";
 
-elif st.session_state.page == "Генератор":
-    st.header(t["gen_header"])
-    
-    # Динамический список документов на выбранном языке
-    docs_mapping = {
-        t["docs"]["labor"]: "labor",
-        t["docs"]["prop"]: "prop",
-        t["docs"]["rent"]: "rent",
-        t["docs"]["serv"]: "serv",
-        t["docs"]["car"]: "car"
+const docKeys = ["labor", "prop", "rent", "serv", "car"] as const;
+
+export default function GeneratorPage() {
+  const { lang, t } = useLang();
+  const [docId, setDocId] = useState<string>("labor");
+  const [form, setForm] = useState({ p1: "", p2: "", d1: "", d2: "", d3: "", addr: "" });
+  const [generating, setGenerating] = useState(false);
+  const [blob, setBlob] = useState<Blob | null>(null);
+
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.p1 || !form.p2) return;
+    setGenerating(true);
+    try {
+      const b = await createDocx(docId, form as DocData, lang);
+      setBlob(b);
+    } finally {
+      setGenerating(false);
     }
-    
-    doc_choice_ui = st.selectbox(t["doc_type"], list(docs_mapping.keys()))
-    doc_id = docs_mapping[doc_choice_ui]
+  };
 
-    # Специфические вопросы формы для каждого документа
-    with st.form("main_form"):
-        st.subheader("1. " + t["address_lbl"].split()[0])
-        c1, c2 = st.columns(2)
-        
-        # Получаем ключи вопросов из словаря
-        p1_q = t["fields"][f"p1_{doc_id}"]
-        p2_q = t["fields"][f"p2_{doc_id}"]
-        
-        org_name = c1.text_input(p1_q)
-        client_name = c2.text_input(p2_q)
-        
-        st.subheader("2. Детали")
-        col3, col4 = st.columns(2)
-        
-        if doc_id == "labor":
-            d1 = col3.text_input(t["fields"]["labor_pos"])
-            d2 = col4.text_input(t["fields"]["labor_salary"])
-            d3 = st.text_input(t["fields"]["labor_term"])
-        elif doc_id == "rent":
-            d1 = col3.text_input(t["fields"]["rent_addr"])
-            d2 = col4.text_input(t["fields"]["rent_price"])
-            d3 = st.text_input(t["fields"]["rent_term"])
-        elif doc_id == "car":
-            d1 = col3.text_input(t["fields"]["car_desc"])
-            d2 = col4.text_input(t["fields"]["car_price"])
-            d3 = st.text_input(t["fields"]["car_id"])
-        elif doc_id == "serv":
-            d1 = col3.text_input(t["fields"]["serv_desc"])
-            d2 = col4.text_input(t["fields"]["serv_price"])
-            d3 = st.text_input(t["fields"]["serv_term"])
-        else: # prop
-            d1 = col3.text_input(t["fields"]["prop_name"])
-            d2 = col4.text_input(t["fields"]["prop_price"])
-            d3 = st.text_input(t["fields"]["prop_term"])
+  const handleDownload = () => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${docId}_${form.p2 || "document"}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-        address = st.text_area(t["address_lbl"])
-        submitted = st.form_submit_button(t["submit"])
+  const inputCls = "w-full bg-secondary/60 text-foreground text-sm rounded-xl px-4 py-3 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/60";
 
-    if submitted:
-        if org_name and client_name:
-            res_col, ai_col = st.columns([2, 1])
-            
-            with res_col:
-                st.markdown("<div class='doc-preview'>", unsafe_allow_html=True)
-                
-                # Рендеринг ПРЕВЬЮ на выбранном языке
-                if doc_id == "labor":
-                    st.markdown("<h3 style='text-align:center;'>№ __ ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР</h3>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='display:flex; justify-content:space-between;'><span>Астана қ. / г. Астана</span><span>{now.strftime('%d.%m.%Y')} ж/г.</span></p>", unsafe_allow_html=True)
-                    k1, k2 = st.columns(2)
-                    k1.write(f"**Жұмыс беруші:** {org_name}\n\n**Жұмыскер:** {client_name}\n\nЛауазымы: {d1}")
-                    k2.write(f"**Работодатель:** {org_name}\n\n**Работник:** {client_name}\n\nДолжность: {d1}")
-                    st.write(f"**Оклад / Жалақы:** {d2} KZT<br>**Мерзімі / Срок:** {d3}", unsafe_allow_html=True)
-                    r1, r2 = "Работодатель / Жұмыс беруші", "Работник / Жұмыскер"
-                else:
-                    titles_preview = {
-                        "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ", "rent": "ДОГОВОР АРЕНДЫ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТС"},
-                        "English": {"prop": "SALE AND PURCHASE AGREEMENT", "rent": "LEASE AGREEMENT", "serv": "SERVICES AGREEMENT", "car": "VEHICLE SALE AGREEMENT"},
-                        "Қазақша": {"prop": "САТЫП АЛУ-САТУ ШАРТЫ", "rent": "ЖАЛДАУ ШАРТЫ", "serv": "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", "car": "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ"}
-                    }
-                    roles_preview = {
-                        "Русский": {"prop": ("Продавец", "Покупатель"), "rent": ("Арендодатель", "Арендатор"), "serv": ("Заказчик", "Исполнитель"), "car": ("Продавец", "Покупатель")},
-                        "English": {"prop": ("Seller", "Buyer"), "rent": ("Landlord", "Tenant"), "serv": ("Customer", "Contractor"), "car": ("Seller", "Buyer")},
-                        "Қазақша": {"prop": ("Сатушы", "Сатып алушы"), "rent": ("Жалға беруші", "Жалға алушы"), "serv": ("Тапсырыс беруші", "Орындаушы"), "car": ("Сатушы", "Сатып алушы")}
-                    }
-                    
-                    r1, r2 = roles_preview[selected_lang][doc_id]
-                    st.markdown(f"<h3 style='text-align:center;'>{titles_preview[selected_lang][doc_id]}</h3>", unsafe_allow_html=True)
-                    st.markdown(f"<p style='display:flex; justify-content:space-between;'><span>{translations[selected_lang]['city']}</span><span>{now.strftime('%d.%m.%Y')}</span></p>", unsafe_allow_html=True)
-                    
-                    # Логика текста преамбулы в превью
-                    if selected_lang == "Русский":
-                        st.markdown(f"<p><b>{org_name}</b> (далее - {r1}), с одной стороны, и <b>{client_name}</b> (далее - {r2}), с другой стороны, заключили настоящий договор:</p>", unsafe_allow_html=True)
+  return (
+    <div className="min-h-screen px-6 py-10 page-transition max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold text-foreground mb-8 animate-fade-in">{t.genHeader}</h2>
+
+      <div className="glass-card p-6 mb-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <label className="text-sm text-muted-foreground mb-2 block">{t.docType}</label>
+        <select
+          value={docId}
+          onChange={(e) => { setDocId(e.target.value); setBlob(null); }}
+          className={inputCls}
+        >
+          {docKeys.map((k) => (
+            <option key={k} value={k}>{t.docs[k]}</option>
+          ))}
+        </select>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <div className="glass-card p-6 space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">1. Стороны</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input className={inputCls} placeholder={t.fields[`p1_${docId}`]} value={form.p1} onChange={(e) => set("p1", e.target.value)} />
+            <input className={inputCls} placeholder={t.fields[`p2_${docId}`]} value={form.p2} onChange={(e) => set("p2", e.target.value)} />
+          </div>
+        </div>
+
+        <div className="glass-card p-6 space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">2. Детали</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input className={inputCls} placeholder={t.fields[`d1_${docId}`]} value={form.d1} onChange={(e) => set("d1", e.target.value)} />
+            <input className={inputCls} placeholder={t.fields[`d2_${docId}`]} value={form.d2} onChange={(e) => set("d2", e.target.value)} />
+          </div>
+          <input className={inputCls} placeholder={t.fields[`d3_${docId}`]} value={form.d3} onChange={(e) => set("d3", e.target.value)} />
+          <textarea className={inputCls + " min-h-[80px] resize-none"} placeholder={t.address} value={form.addr} onChange={(e) => set("addr", e.target.value)} />
+        </div>
+
+        <button
+          type="submit"
+          disabled={generating || !form.p1 || !form.p2}
+          className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          {generating ? "..." : t.submit}
+        </button>
+      </form>
+
+      {blob && (
+        <div className="mt-6 glass-card p-6 glow-border animate-fade-in text-center">
+          <p className="text-sm text-muted-foreground mb-4">✅ Документ готов!</p>
+          <button
+            onClick={handleDownload}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold text-sm hover:brightness-110 transition-all"
+          >
+            <Download className="w-4 h-4" />
+            {t.download}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+============================================================
+📄 src/pages/FeedbackPage.tsx
+============================================================
+import { useState } from "react";
+import { useLang } from "@/lib/LangContext";
+import { Star } from "lucide-react";
+
+const reviews = [
+  { name: 'Айдос, ИП "AlmatyTech"', text: "Отличный генератор! Сэкономил кучу времени на договорах аренды.", wish: "Добавьте возможность загружать свои собственные шаблоны." },
+  { name: "Елена, HR-менеджер", text: "Трудовые договоры на двух языках (Каз/Рус) — это просто спасение!", wish: "Было бы здорово сохранять базу сотрудников." },
+];
+
+export default function FeedbackPage() {
+  const { t } = useLang();
+  const [sent, setSent] = useState(false);
+
+  return (
+    <div className="min-h-screen px-6 py-10 page-transition max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold text-foreground mb-8 animate-fade-in">{t.feedbackTitle}</h2>
+
+      <div className="space-y-4 mb-10">
+        {reviews.map((r, i) => (
+          <div key={i} className="glass-card p-5 animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-semibold text-foreground">👤 {r.name}</span>
+              <div className="flex gap-0.5">{[...Array(5)].map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
+            </div>
+            <p className="text-sm text-muted-foreground">{r.text}</p>
+            <p className="text-xs text-primary/70 mt-2">💡 {r.wish}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <p className="text-sm font-semibold text-foreground mb-4">Оставить отзыв:</p>
+        {sent ? (
+          <p className="text-primary text-sm font-medium">✅ {t.thanks}</p>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); setSent(true); }} className="space-y-3">
+            <input className="w-full bg-secondary/60 text-foreground text-sm rounded-xl px-4 py-3 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/60" placeholder={t.name} required />
+            <textarea className="w-full bg-secondary/60 text-foreground text-sm rounded-xl px-4 py-3 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[80px] resize-none placeholder:text-muted-foreground/60" placeholder={t.review} required />
+            <button type="submit" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold text-sm hover:brightness-110 transition-all">
+              {t.send}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+============================================================
+📄 src/pages/AuthorsPage.tsx
+============================================================
+import { useLang } from "@/lib/LangContext";
+import { Code2, MapPin } from "lucide-react";
+
+export default function AuthorsPage() {
+  const { t } = useLang();
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6 page-transition">
+      <div className="glass-card p-10 text-center max-w-sm animate-fade-in">
+        <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-5">
+          <Code2 className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground mb-1">{t.authors}</h2>
+        <p className="text-lg font-semibold text-foreground mt-4">Yeraly & Ramazan</p>
+        <p className="text-sm text-muted-foreground">8 класс</p>
+        <div className="flex items-center justify-center gap-1 mt-3 text-muted-foreground text-sm">
+          <MapPin className="w-3 h-3" /> Астана
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+============================================================
+📄 src/pages/NotFound.tsx
+============================================================
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
+const NotFound = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+  }, [location.pathname]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted">
+      <div className="text-center">
+        <h1 className="mb-4 text-4xl font-bold">404</h1>
+        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
+        <a href="/" className="text-primary underline hover:text-primary/90">
+          Return to Home
+        </a>
+      </div>
+    </div>
+  );
+};
+
+export default NotFound;
+
+
+============================================================
+📄 index.html
+============================================================
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>Lovable App</title>
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
+
+    <!-- TODO: Update og:title to match your application name -->
+    <meta property="og:title" content="Lovable App" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
