@@ -4,7 +4,7 @@ from datetime import date, datetime
 import os
 import pytz
 
-# ===== 1. КОНФИГУРАЦИЯ СТРАНИЦЫ (СТРОГАЯ) =====
+# ===== 1. КОНФИГУРАЦИЯ СТРАНИЦЫ =====
 st.set_page_config(
     page_title="EasyDoc AI | Intelligent Business Systems", 
     page_icon="📝", 
@@ -12,7 +12,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Инициализация состояния страницы
 if 'page' not in st.session_state:
     st.session_state.page = "Home"
 
@@ -20,7 +19,7 @@ def nav_to(page_name):
     st.session_state.page = page_name
     st.rerun()
 
-# ===== 2. PREMIUM ДИЗАЙН (CSS) - ТВОЙ СТИЛЬ + ПРЕДПРОСМОТР =====
+# ===== 2. PREMIUM ДИЗАЙН (CSS) =====
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -46,61 +45,30 @@ st.markdown("""
         border-right: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    .stRadio>div { gap: 10px; }
-    .stRadio>div>label {
-        background-color: transparent !important;
-        color: #94a3b8 !important;
-        border-radius: 8px;
-        padding: 10px 15px !important;
-        border: 1px solid transparent;
-        transition: 0.2s;
-        font-weight: 500;
-    }
-    .stRadio>div>label:hover { background-color: rgba(255, 255, 255, 0.03) !important; color: white !important; }
     .stRadio>div>label[data-testid="stWidgetActive"] { 
-        background-color: rgba(99, 102, 241, 0.05) !important;
-        color: #a5b4fc !important;
-        border: 1px solid rgba(99, 102, 241, 0.1) !important;
         border-left: 3px solid #6366f1 !important;
+        background: rgba(99, 102, 241, 0.05) !important;
+        color: #a5b4fc !important;
     }
 
-    h1, h2, h3 { color: #ffffff !important; font-weight: 800 !important; letter-spacing: -0.03em; }
-    
     .main-title { 
-        font-size: 3.8rem; font-weight: 800; text-align: center; margin-bottom: 0.5rem;
+        font-size: 3.8rem; font-weight: 800; text-align: center;
         background: linear-gradient(120deg, #ffffff, #c7d2fe);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 25px rgba(165, 180, 252, 0.2);
-    }
-    .main-sub { font-size: 1.3rem; text-align: center; color: #94a3b8; margin-bottom: 3.5rem; font-weight: 400; }
-
-    .stTextInput>div>div>input, .stSelectbox>div>div>div {
-        background-color: #111827 !important;
-        color: #f1f5f9 !important;
-        border: 1px solid #1f2937 !important;
-        border-radius: 10px;
-        padding: 10px;
-    }
-
-    .stButton>button {
-        background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%);
-        color: white; border: 1px solid #312e81; border-radius: 12px;
-        font-weight: 600; height: 50px; width: 100%; transition: 0.2s ease;
-        text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.9rem;
     }
 
     /* СТИЛЬ ПРЕДПРОСМОТРА (БЕЛЫЙ ЛИСТ) */
     .doc-preview {
-        background: white; color: #1a1a1a; padding: 50px;
+        background: white; color: #1a1a1a; padding: 60px;
         border-radius: 4px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        font-family: 'Times New Roman', serif; line-height: 1.5;
+        font-family: 'Times New Roman', serif; line-height: 1.6;
         max-width: 100%; margin: 30px auto; position: relative;
-        text-align: justify;
+        text-align: justify; border: 1px solid #ddd;
     }
-    .doc-header { text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .doc-header { text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 1.2rem; }
     .doc-stamp { 
-        position: absolute; bottom: 40px; right: 40px; 
-        width: 110px; border: 3px double #1e3a8a; 
+        position: absolute; bottom: 50px; right: 50px; 
+        width: 120px; border: 3px double #1e3a8a; 
         color: #1e3a8a; padding: 5px; text-align: center; 
         font-size: 0.7rem; transform: rotate(-15deg); font-weight: bold;
     }
@@ -109,26 +77,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 3. ТЕКСТЫ И СЛОВАРЬ =====
+# ===== 3. ТЕКСТЫ ШАБЛОНОВ =====
 DOC_TEXTS = {
     "English": {
-        "Employment Agreement": "Company {pA} hires {pB} for the role of {d1}. Salary: {d2} KZT.",
-        "NDA": "Parties {pA} and {pB} agree to keep {d1} secret. Penalty: {d2} KZT.",
-        "Service Level Agreement": "Contractor {pB} provides {d1} to {pA} for {d2} KZT.",
-        "Sales Purchase Contract": "Seller {pA} delivers {d1} to Buyer {pB} for {d2} KZT.",
-        "Residential Lease": "Landlord {pA} leases property to {pB}. Monthly rent: {d2} KZT."
+        "Employment Agreement": "Company {pA} (Employer) and {pB} (Employee) hereby enter into this agreement. The Employee shall perform duties as {d1} with a monthly compensation of {d2} KZT.",
+        "NDA": "Parties {pA} and {pB} agree to maintain strict confidentiality regarding {d1}. Any breach will result in a penalty of {d2} KZT.",
+        "Service Level Agreement": "Contractor {pB} agrees to provide {d1} services to Client {pA}. The total service fee is fixed at {d2} KZT.",
+        "Sales Purchase Contract": "Seller {pA} agrees to transfer the ownership of {d1} to Buyer {pB} for the total amount of {d2} KZT.",
+        "Residential Lease": "Landlord {pA} grants Tenant {pB} the right to occupy the property for the purpose of residence. Monthly rent: {d2} KZT."
     },
     "Русский": {
-        "Трудовой договор": "Мекеме {pA} жұмысқа {pB} азаматын {d1} лауазымына қабылдайды. Жалақысы: {d2} теңге.",
-        "Соглашение NDA": "Стороны {pA} и {pB} обязуются хранить в тайне {d1}. Штраф: {d2} тенге.",
-        "Договор оказания услуг": "Исполнитель {pB} оказывает услуги {d1} для {pA}. Стоимость: {d2} тенге.",
-        "Договор купли-продажи": "Продавец {pA} передает товар {d1} Покупателю {pB}. Цена: {d2} тенге.",
-        "Договор аренды": "Арендодатель {pA} сдает жилье {pB}. Плата: {d2} тенге."
+        "Трудовой договор": "Работодатель {pA} и Работник {pB} заключили настоящий договор. Работник принимается на должность {d1} с окладом {d2} тенге.",
+        "Соглашение NDA": "Стороны {pA} и {pB} обязуются хранить в тайне информацию о {d1}. Штраф за разглашение: {d2} тенге.",
+        "Договор оказания услуг": "Исполнитель {pB} обязуется оказать услуги {d1} для Заказчика {pA}. Стоимость услуг: {d2} тенге.",
+        "Договор купли-продажи": "Продавец {pA} передает товар {d1} Покупателю {pB}. Сумма сделки: {d2} тенге.",
+        "Договор аренды": "Арендодатель {pA} передает во временное владение жилье для {pB}. Оплата: {d2} тенге."
     },
     "Қазақша": {
-        "Еңбек шарты": "{pA} мекемесі {pB} азаматын {d1} қызметіне қабылдайды. Жалақы: {d2} теңге.",
-        "NDA келісімі": "{pA} және {pB} тараптары {d1} құпия сақтауға келісті. Айыппұл: {d2} теңге.",
-        "Қызмет көрсету шарты": "{pB} орындаушы {pA} үшін {d1} қызметін көрсетеді. Құны: {d2} теңге.",
+        "Еңбек шарты": "{pA} мекемесі мен {pB} азаматы осы келісімді жасасты. Жұмысшы {d1} лауазымына қабылданады. Жалақы: {d2} теңге.",
+        "NDA келісімі": "{pA} және {pB} тараптары {d1} туралы ақпаратты құпия сақтауға міндетті. Айыппұл: {d2} теңге.",
+        "Қызмет көрсету шарты": "{pB} орындаушы {pA} үшін {d1} қызметін көрсетеді. Қызмет құны: {d2} теңге.",
         "Сату-сатып алу шарты": "{pA} сатушы {pB} сатып алушыға {d1} береді. Бағасы: {d2} теңге.",
         "Жалдау шарты": "{pA} жалға беруші {pB} жалға алушыға нысанды береді. Төлем: {d2} теңге."
     }
@@ -141,7 +109,7 @@ DICT = {
         "start": "Launch Generator", "type_lab": "Document Category",
         "f_pA": "Organization Name", "f_pB": "Full Name", 
         "f_d1": "Detail (Position/Item)", "f_d2": "Value (KZT)",
-        "gen": "GENERATE DOCUMENT", "success": "Ready.", "stamp": "AI APPROVED"
+        "gen": "CREATE DOCUMENT", "success": "Document Generated Successfully.", "stamp": "AI APPROVED"
     },
     "Русский": {
         "nav": ["Главная", "Генератор", "Отзывы", "Авторы"],
@@ -149,7 +117,7 @@ DICT = {
         "start": "Открыть Генератор", "type_lab": "Категория документа",
         "f_pA": "Организация", "f_pB": "ФИО", 
         "f_d1": "Детали (Должность/Товар)", "f_d2": "Сумма (₸)",
-        "gen": "СФОРМИРОВАТЬ ПРЕВЬЮ", "success": "Готово.", "stamp": "ОДОБРЕНО AI"
+        "gen": "СОЗДАТЬ ДОКУМЕНТ", "success": "Документ успешно сформирован.", "stamp": "ОДОБРЕНО AI"
     },
     "Қазақша": {
         "nav": ["Басты бет", "Генератор", "Кері байланыс", "Авторлар"],
@@ -157,20 +125,22 @@ DICT = {
         "start": "Генераторды қосу", "type_lab": "Құжат түрі",
         "f_pA": "Мекеме атауы", "f_pB": "Толық аты-жөні", 
         "f_d1": "Мәліметтер", "f_d2": "Қаржы (₸)",
-        "gen": "ҚҰЖАТТЫ ДАЙЫНДАУ", "success": "Дайын.", "stamp": "AI МАҚҰЛДАҒАН"
+        "gen": "ҚҰЖАТТЫ ДАЙЫНДАУ", "success": "Құжат дайын.", "stamp": "AI МАҚҰЛДАҒАН"
     }
 }
 
-# ===== 4. SIDEBAR =====
+# ===== 4. SIDEBAR (АКТУАЛЬНАЯ ДАТА) =====
 with st.sidebar:
     st.markdown("<h3 style='text-align:center;'>EasyDoc Panel</h3>", unsafe_allow_html=True)
     lang_choice = st.selectbox("🌐 Language", ("English", "Русский", "Қазақша"), index=1)
     S = DICT[lang_choice]
     
     st.divider()
+    # АКТУАЛЬНАЯ ДАТА И ВРЕМЯ
     astana_tz = pytz.timezone('Asia/Almaty')
     now = datetime.now(astana_tz)
     st.metric(label="Astana Time", value=now.strftime("%H:%M:%S"))
+    st.write(f"📅 **Date:** {now.strftime('%d.%m.%Y')}")
     
     st.divider()
     page_selection = st.radio("Navigation", S["nav"], label_visibility="collapsed")
@@ -188,14 +158,12 @@ if st.session_state.page == S["nav"][0]:
     col_l, col_m, col_r = st.columns([1,2,1])
     if col_m.button(S["start"]): nav_to(S["nav"][1])
 
-# --- ГЕНЕРАТОР (ПРЕВЬЮ ТУТ) ---
+# --- ГЕНЕРАТОР ---
 elif st.session_state.page == S["nav"][1]:
-    # Лого по центру (среднее)
     c1, c2, c3 = st.columns([1,1,1])
     if os.path.exists("logo_pen.png"): c2.image("logo_pen.png", width=180)
         
     st.header(S["type_lab"])
-    # Список типов документов из словаря
     doc_types_list = list(DOC_TEXTS[lang_choice].keys())
     doc_choice = st.selectbox("", doc_types_list, label_visibility="collapsed")
     
@@ -205,32 +173,38 @@ elif st.session_state.page == S["nav"][1]:
         pB = c2.text_input(S["f_pB"])
         d1 = c1.text_input(S["f_d1"])
         d2 = c2.text_input(S["f_d2"])
-        submitted = st.form_submit_button(S["gen"])
+        submitted = st.form_submit_button(S["gen"]) # Кнопка СОЗДАТЬ ДОКУМЕНТ
         
     if submitted:
         if pA and pB:
-            with st.spinner("Processing..."): time.sleep(1)
+            with st.spinner("Processing official document..."): time.sleep(1)
             
-            # ВЫВОД ПРЕВЬЮ (БЕЛЫЙ ЛИСТ)
+            # ФОРМИРУЕМ ТЕКСТ
+            doc_id = int(time.time()) % 10000
+            content = DOC_TEXTS[lang_choice][doc_choice].format(pA=pA, pB=pB, d1=d1, d2=d2)
+            
+            # КРАСИВОЕ ПРЕВЬЮ
             st.markdown(f"""
             <div class="doc-preview">
-                <div class="doc-header">{doc_choice.upper()} №{int(time.time())%1000}</div>
+                <div class="doc-header">{doc_choice.upper()} №{doc_id}</div>
                 <p><b>City:</b> Astana &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Date:</b> {now.strftime('%d.%m.%Y')}</p>
-                <p>{DOC_TEXTS[lang_choice][doc_choice].format(pA=pA, pB=pB, d1=d1, d2=d2)}</p>
-                <p>This document is electronically generated and holds legal power within the digital infrastructure of EasyDoc AI.</p>
-                <br><br>
-                <p>____________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ____________________</p>
-                <p><i>Signature (Party A) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Signature (Party B)</i></p>
-                <div class="doc-stamp">{S['stamp']}<br>VERIFIED</div>
+                <p>{content}</p>
+                <p>This document is electronically generated and holds legal power within the digital infrastructure of EasyDoc AI. Valid until signed by both parties.</p>
+                <br><br><br>
+                <p>____________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ____________________</p>
+                <p><i>{pA} (Signature) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {pB} (Signature)</i></p>
+                <div class="doc-stamp">{S['stamp']}<br>ID-{doc_id}</div>
             </div>
             """, unsafe_allow_html=True)
             
+            # ФАЙЛ ДЛЯ СКАЧИВАНИЯ (С ТЕМ ЖЕ ТЕКСТОМ)
+            full_file_text = f"{doc_choice} №{doc_id}\nCity: Astana\nDate: {now.strftime('%d.%m.%Y')}\n\n{content}\n\nApproved by EasyDoc AI."
             st.success(S["success"])
-            st.download_button("📥 Download Official .DOC", f"DOC: {doc_choice}\nFrom: {pA}\nTo: {pB}", f"EasyDoc_{pB}.doc")
+            st.download_button("📥 Download Official .TXT", full_file_text, f"EasyDoc_{doc_id}.txt")
         else:
-            st.error("Fill fields.")
+            st.error("Fill mandatory fields.")
 
-# --- ОТЗЫВЫ ---
+# --- ОСТАЛЬНЫЕ СТРАНИЦЫ ---
 elif st.session_state.page == S["nav"][2]:
     st.markdown(f"<h2 style='text-align:center;'>{S['feed_h']}</h2>", unsafe_allow_html=True)
     with st.form("feedback_form"):
@@ -240,11 +214,9 @@ elif st.session_state.page == S["nav"][2]:
             st.balloons()
             st.success("Sent!")
 
-# --- АВТОРЫ ---
 elif st.session_state.page == S["nav"][3]:
     st.markdown(f"<h2 style='text-align:center;'>{S['auth_h']}</h2>", unsafe_allow_html=True)
     if os.path.exists("authors.jpg"): st.image("authors.jpg", use_container_width=True)
-    st.markdown("<div style='text-align:center; color:#94a3b8;'><p>Yeraly & Ramazan | 8th Grade | Astana</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; color:#94a3b8;'><p>Yeraly & Ramazan | 8th Grade | Astana, {now.year}</p></div>", unsafe_allow_html=True)
 
-# ===== 6. ФУТЕР =====
-st.markdown("<div class='footer'>EasyDoc AI System &copy; 2026 | Astana</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='footer'>EasyDoc AI System &copy; {now.year} | Astana</div>", unsafe_allow_html=True)
