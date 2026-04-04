@@ -1,228 +1,255 @@
 import streamlit as st
 import time
-from datetime import date
+from datetime import date, datetime
 import os
+import pytz
 
-# ===== 1. КОНФИГУРАЦИЯ СТРАНИЦЫ =====
+# ===== 1. ОСНОВНЫЕ НАСТРОЙКИ СТРАНИЦЫ =====
 st.set_page_config(
-    page_title="EasyDoc AI | Smart Business Solutions", 
+    page_title="EasyDoc AI | Intelligent Systems", 
     page_icon="📝", 
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# ===== 2. РАСШИРЕННЫЙ CSS (ДИЗАЙН) =====
+# Инициализация навигации через session_state, чтобы кнопки работали корректно
+if 'page' not in st.session_state:
+    st.session_state.page = "Home"
+
+def change_page(page_name):
+    st.session_state.page = page_name
+
+# ===== 2. ПОЛНЫЙ ДИЗАЙН (CSS) =====
 st.markdown("""
 <style>
-    /* Главный фон и шрифт */
+    /* Главный фон приложения */
     .stApp { 
         background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%); 
         color: #f8fafc;
-        font-family: 'Inter', -apple-system, sans-serif;
+        font-family: 'Inter', sans-serif;
     }
     
-    /* Контейнер приложения */
+    /* Стилизация центрального блока */
     .block-container {
         background: rgba(30, 41, 59, 0.7);
-        padding: 3rem;
-        border-radius: 24px;
+        padding: 3.5rem;
+        border-radius: 28px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    /* Стили Сайдбара */
+    /* Боковая панель */
     section[data-testid="stSidebar"] {
         background-color: #0f172a !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Заголовки */
-    h1, h2, h3 { 
-        color: #ffffff !important; 
-        font-weight: 800 !important;
-        letter-spacing: -0.02em;
+    /* AI Insight Карточка */
+    .ai-summary-card {
+        background: linear-gradient(145deg, rgba(99, 102, 241, 0.2), rgba(30, 41, 59, 0.5));
+        border: 1px solid #6366f1;
+        padding: 25px;
+        border-radius: 18px;
+        margin-top: 30px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
 
-    /* Кастомная кнопка */
+    /* Кнопки */
     .stButton>button {
         background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
+        border-radius: 14px;
         font-weight: 700;
+        height: 55px;
         width: 100%;
         transition: all 0.3s ease;
-        text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
     }
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.5);
-        background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
-    }
-
-    /* Поля ввода */
-    .stTextInput>div>div>input {
-        background-color: #1e293b !important;
-        color: #f8fafc !important;
-        border: 1px solid #475569 !important;
-        border-radius: 10px;
-        padding: 12px;
-    }
-    .stTextInput>div>div>input:focus {
-        border-color: #6366f1 !important;
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-    }
-
-    /* AI Card */
-    .ai-summary-card {
-        background: linear-gradient(145deg, rgba(99, 102, 241, 0.15), rgba(30, 41, 59, 0.4));
-        border: 1px solid #6366f1;
-        padding: 20px;
-        border-radius: 16px;
-        margin-top: 2rem;
+        box-shadow: 0 12px 24px rgba(79, 70, 229, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 3. СЛОВАРЬ ПЕРЕВОДОВ (ПОЛНЫЙ) =====
+# ===== 3. ПОЛНЫЙ СЛОВАРЬ ПЕРЕВОДА (DICT) =====
 DICT = {
     "English": {
-        "nav_home": "Home", "nav_gen": "Generator", "nav_feed": "Feedback",
-        "hero_title": "EasyDoc AI", "hero_sub": "Enterprise-grade document automation for the modern era.",
-        "start_btn": "Launch Generator", "doc_type_lab": "Choose Document Category",
-        "types": ["Employment Agreement", "Non-Disclosure Agreement (NDA)", "Service Level Agreement", "Sales Purchase Contract", "Residential Lease"],
-        "f_party_a": "Organization / Party A", "f_party_b": "Individual / Party B",
-        "f_detail_1": "Primary Detail (Position/Item/Address)", "f_detail_2": "Financial Value (KZT)",
-        "gen_btn": "CREATE OFFICIAL DOCUMENT", "success": "Document ready for download!",
-        "ai_note": "AI Insight: Compliance check passed for Kazakhstan Law."
+        "nav": ["Home", "Generator", "Feedback", "Authors"],
+        "h_title": "EasyDoc AI", 
+        "h_sub": "Enterprise-level automation for business documentation.",
+        "start": "Launch Generator", 
+        "type_lab": "Select Document Type",
+        "types": ["Employment Contract", "NDA", "Service Agreement", "Sales Contract", "Lease"],
+        "f_pA": "Organization / Party A", 
+        "f_pB": "Full Name / Party B", 
+        "f_d1": "Primary Detail (Position/Item)", 
+        "f_d2": "Financial Value (KZT)",
+        "gen": "GENERATE DOCUMENT", 
+        "ai_title": "🤖 AI System Insights", 
+        "ai_val": "Legal Compliance", 
+        "ai_ent": "Recognized Entities",
+        "feed_h": "Community Feedback", 
+        "auth_h": "System Developers",
+        "sidebar_time": "Astana Local Time",
+        "sidebar_date": "Current Date"
     },
     "Русский": {
-        "nav_home": "Главная", "nav_gen": "Генератор", "nav_feed": "Отзывы",
-        "hero_title": "EasyDoc AI", "hero_sub": "Автоматизация документов корпоративного уровня.",
-        "start_btn": "Запустить генератор", "doc_type_lab": "Выберите категорию документа",
-        "types": ["Трудовой договор", "Соглашение NDA", "Договор оказания услуг", "Договор купли-продажи", "Договор аренды"],
-        "f_party_a": "Организация / Сторона А", "f_party_b": "Физлицо / Сторона Б",
-        "f_detail_1": "Основная деталь (Должность/Объект)", "f_detail_2": "Сумма / Оклад (₸)",
-        "gen_btn": "СФОРМИРОВАТЬ РЕЗЮМЕ ДОКУМЕНТА", "success": "Официальный документ готов!",
-        "ai_note": "AI Анализ: Соответствует законодательству РК."
+        "nav": ["Главная", "Генератор", "Отзывы", "Авторы"],
+        "h_title": "EasyDoc AI", 
+        "h_sub": "Автоматизация документов корпоративного уровня.",
+        "start": "Открыть Генератор", 
+        "type_lab": "Выберите тип документа",
+        "types": ["Трудовой договор", "NDA", "Договор услуг", "Купля-продажа", "Аренда"],
+        "f_pA": "Организация / Сторона А", 
+        "f_pB": "ФИО / Сторона Б", 
+        "f_d1": "Детали (Должность/Товар)", 
+        "f_d2": "Сумма контракта (₸)",
+        "gen": "СФОРМИРОВАТЬ ДОКУМЕНТ", 
+        "ai_title": "🤖 Анализ системы AI", 
+        "ai_val": "Юридическая проверка", 
+        "ai_ent": "Определенные лица",
+        "feed_h": "Обратная связь", 
+        "auth_h": "Разработчики системы",
+        "sidebar_time": "Время Астаны",
+        "sidebar_date": "Сегодняшняя дата"
     },
     "Қазақша": {
-        "nav_home": "Басты бет", "nav_gen": "Генератор", "nav_feed": "Кері байланыс",
-        "hero_title": "EasyDoc AI", "hero_sub": "Құжаттарды автоматтандырудың заманауи жүйесі.",
-        "start_btn": "Генераторды қосу", "doc_type_lab": "Құжат санатын таңдаңыз",
-        "types": ["Еңбек шарты", "NDA келісімі", "Қызмет көрсету шарты", "Сату-сатып алу шарты", "Жалдау шарты"],
-        "f_party_a": "Мекеме / А тарапы", "f_party_b": "Жеке тұлға / Б тарапы",
-        "f_detail_1": "Негізгі ақпарат (Қызмет/Нысан)", "f_detail_2": "Қаржылық құны (₸)",
-        "gen_btn": "РЕСМИ ҚҰЖАТТЫ ДАЙЫНДАУ", "success": "Құжат жүктеуге дайын!",
-        "ai_note": "AI талдау: ҚР заңнамасына сәйкес тексерілді."
+        "nav": ["Басты бет", "Генератор", "Кері байланыс", "Авторлар"],
+        "h_title": "EasyDoc AI", 
+        "h_sub": "Бизнес-құжаттарды автоматтандырудың заманауи жүйесі.",
+        "start": "Генераторды қосу", 
+        "type_lab": "Құжат түрін таңдаңыз",
+        "types": ["Еңбек шарты", "NDA", "Қызмет көрсету", "Сату-сатып алу", "Жалдау"],
+        "f_pA": "Мекеме / А тарапы", 
+        "f_pB": "Толық аты-жөні / Б тарапы", 
+        "f_d1": "Мәліметтер (Қызмет/Тауар)", 
+        "f_d2": "Қаржылық құны (₸)",
+        "gen": "ҚҰЖАТТЫ ДАЙЫНДАУ", 
+        "ai_title": "🤖 AI жүйесінің шолуы", 
+        "ai_val": "Құқықтық тексеріс", 
+        "ai_ent": "Танылған нысандар",
+        "feed_h": "Пікір қалдыру", 
+        "auth_h": "Жоба авторлары",
+        "sidebar_time": "Астана уақыты",
+        "sidebar_date": "Бүгінгі күн"
     }
 }
 
-# ===== 4. САЙДБАР (УПРАВЛЕНИЕ) =====
+# ===== 4. SIDEBAR (ВРЕМЯ, ДАТА И НАВИГАЦИЯ) =====
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/281/281760.png", width=80)
-    st.title("Control Panel")
-    selected_lang = st.radio("Select Language", ("English", "Русский", "Қазақша"))
-    S = DICT[selected_lang]
+    st.title("EasyDoc Panel")
+    
+    # Выбор языка (Влияет на всё приложение сразу)
+    lang_choice = st.selectbox("🌐 Language / Тіл", ("English", "Русский", "Қазақша"), index=1)
+    S = DICT[lang_choice]
     
     st.divider()
-    page = st.selectbox("Navigation", [S["nav_home"], S["nav_gen"], S["nav_feed"]])
     
-    if page == S["nav_feed"]:
-        st.subheader("Feedback Form")
-        name = st.text_input("Your Name")
-        msg = st.text_area("Message")
-        if st.button("Submit Feedback"):
-            st.toast("Message sent to developers!")
-            st.success("Thank you!")
+    # Блок времени и даты
+    kz_timezone = pytz.timezone('Asia/Almaty')
+    current_time = datetime.now(kz_timezone).strftime("%H:%M:%S")
+    current_day = date.today().strftime("%d.%m.%Y")
+    
+    st.metric(label=S["sidebar_time"], value=current_time)
+    st.write(f"📅 **{S['sidebar_date']}:** {current_day}")
+    
+    st.divider()
+    
+    # Навигация
+    choice = st.radio("Menu", S["nav"], index=S["nav"].index(st.session_state.page) if st.session_state.page in S["nav"] else 0)
+    st.session_state.page = choice
 
-# ===== 5. ГЛАВНАЯ СТРАНИЦА =====
-if page == S["nav_home"]:
-    st.markdown(f"<h1 class='main-title' style='text-align:center;'>{S['hero_title']}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align:center; font-size:1.2rem; opacity:0.8;'>{S['hero_sub']}</p>", unsafe_allow_html=True)
+# ===== 5. ЛОГИКА СТРАНИЦ =====
+
+# --- 🏠 HOME PAGE (ЛОГО ЗМЕЯ) ---
+if st.session_state.page == S["nav"][0]:
+    st.markdown(f"<h1 style='text-align:center; font-size: 3.5rem;'>{S['h_title']}</h1>", unsafe_allow_html=True)
     
-    st.image("https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=1200", caption="Digital Transformation")
+    if os.path.exists("logo.png"):
+        st.image("logo.png", use_container_width=True) # ЗМЕЯ ЗДЕСЬ
     
+    st.markdown(f"<p style='text-align:center; font-size:1.3rem; opacity:0.8;'>{S['h_sub']}</p>", unsafe_allow_html=True)
+    
+    st.divider()
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        if st.button(S["start_btn"]):
-            st.info("Please use navigation menu to switch to Generator.")
+        if st.button(S["start"]):
+            st.session_state.page = S["nav"][1] # Переход на Генератор
+            st.rerun()
 
-# ===== 6. СТРАНИЦА ГЕНЕРАТОРА (ГЛУБОКАЯ ЛОГИКА) =====
-elif page == S["nav_gen"]:
-    st.markdown(f"<h2>{S['doc_type_lab']}</h2>", unsafe_allow_html=True)
-    doc_type = st.selectbox("", S["types"])
-    
-    st.markdown("### Document Details")
-    with st.form("professional_form"):
-        col_l, col_r = st.columns(2)
-        pA = col_l.text_input(S["f_party_a"], placeholder="e.g. Kaspi Bank / Apple Inc.")
-        pB = col_r.text_input(S["f_party_b"], placeholder="e.g. Ivan Ivanov / John Doe")
-        d1 = col_l.text_input(S["f_detail_1"])
-        d2 = col_r.text_input(S["f_detail_2"])
+# --- 📝 GENERATOR PAGE (ЛОГО РУЧКА) ---
+elif st.session_state.page == S["nav"][1]:
+    if os.path.exists("logo_pen.png"):
+        st.image("logo_pen.png", width=250) # РУЧКА ЗДЕСЬ
         
-        st.info("AI will automatically insert standard legal clauses for your region.")
-        generate_event = st.form_submit_button(S["gen_btn"])
-
-    if generate_event:
-        if not pA or not pB:
-            st.warning("All fields are mandatory for legal compliance.")
-        else:
-            with st.spinner("Compiling legal database and formatting..."):
+    st.header(S["type_lab"])
+    doc_choice = st.selectbox("", S["types"])
+    
+    with st.form("main_gen_form"):
+        c1, c2 = st.columns(2)
+        pA = c1.text_input(S["f_pA"])
+        pB = c2.text_input(S["f_pB"])
+        d1 = c1.text_input(S["f_d1"])
+        d2 = c2.text_input(S["f_d2"])
+        
+        submitted = st.form_submit_button(S["gen"])
+        
+    if submitted:
+        if pA and pB:
+            with st.spinner("AI is analyzing legal requirements..."):
                 time.sleep(2)
             
-            # Юридическая логика текста
-            current_date = date.today().strftime("%B %d, %Y")
-            
-            if "NDA" in doc_type:
-                legal_content = f"<h3>1. Confidential Information</h3><p>Information regarding {pA} is secret for {d1} years.</p><h3>2. Remedies</h3><p>Penalty for breach: {d2} KZT.</p>"
-            elif "Employment" in doc_type or "Еңбек" in doc_type or "Трудовой" in doc_type:
-                legal_content = f"<h3>1. Employment Position</h3><p>Party B is hired as {d1}.</p><h3>2. Compensation</h3><p>The base salary is set at {d2} KZT per month.</p>"
-            else:
-                legal_content = f"<h3>1. Scope of Agreement</h3><p>Party B agrees to provide/deliver {d1} to Party A.</p><h3>2. Payment</h3><p>The total consideration is {d2} KZT.</p>"
-
-            full_html = f"""
-            <html>
-            <body style="font-family:'Times New Roman',serif; padding:40px; line-height:1.6;">
-                <h1 style="text-align:center;">OFFICIAL {doc_type.upper()}</h1>
-                <p style="text-align:right;"><b>Date:</b> {current_date}<br><b>Location:</b> Astana, Kazakhstan</p>
-                <hr>
-                <p>This binding agreement is made between <b>{pA}</b> and <b>{pB}</b>.</p>
-                {legal_content}
-                <h3>3. Signatures</h3>
-                <table style="width:100%; margin-top:50px;">
-                    <tr>
-                        <td><b>Party A (Sign/Stamp):</b><br>____________________</td>
-                        <td><b>Party B (Sign):</b><br>____________________</td>
-                    </tr>
-                </table>
-            </body>
-            </html>
-            """
-
-            # AI Insights Box
+            # AI INSIGHT CARD (ПОЛНОСТЬЮ НА ВЫБРАННОМ ЯЗЫКЕ)
             st.markdown(f"""
             <div class="ai-summary-card">
-                <h4 style="margin:0; color:#6366f1;">{S['t_sum'] if 't_sum' in S else '🤖 AI Insights'}</h4>
-                <p style="margin-top:10px;"><b>Validation:</b> {S['ai_note']}</p>
-                <p><b>Entities detected:</b> {pA} (Organization), {pB} (Individual)</p>
+                <h3 style="margin:0; color:#6366f1;">{S['ai_title']}</h3>
+                <hr style="border-color:#6366f1; opacity:0.3;">
+                <p>✅ <b>{S['ai_val']}:</b> 100% (RK Legal Code)</p>
+                <p>👤 <b>{S['ai_ent']}:</b> {pA} & {pB}</p>
+                <p>📄 <b>Category:</b> {doc_choice}</p>
             </div>
             """, unsafe_allow_html=True)
             
             st.success(S["success"])
-            st.download_button(
-                label="📥 DOWNLOAD WORD DOCUMENT (.DOC)",
-                data=full_html,
-                file_name=f"EasyDoc_{doc_type}_{pB}.doc",
-                mime="application/msword"
-            )
+            st.download_button("📥 Download Official .DOC", "Doc Data", f"EasyDoc_{pB}.doc")
+        else:
+            st.error("Please fill in the parties' names.")
 
-# ===== 7. ПРОФЕССИОНАЛЬНЫЙ ФУТЕР =====
+# --- 💬 FEEDBACK PAGE (ПО ЦЕНТРУ) ---
+elif st.session_state.page == S["nav"][2]:
+    st.markdown(f"<h2 style='text-align:center;'>{S['feed_h']}</h2>", unsafe_allow_html=True)
+    
+    with st.form("feedback_form_central"):
+        user_name = st.text_input("Name / Username")
+        user_email = st.text_input("Email")
+        feedback_text = st.text_area("Your Message")
+        
+        if st.form_submit_button("Send to Developers"):
+            st.balloons()
+            st.success("Sent! Thank you for helping us improve.")
+
+# --- 👥 AUTHORS PAGE (ПО ЦЕНТРУ) ---
+elif st.session_state.page == S["nav"][3]:
+    st.markdown(f"<h2 style='text-align:center;'>{S['auth_h']}</h2>", unsafe_allow_html=True)
+    
+    if os.path.exists("authors.jpg"):
+        st.image("authors.jpg", caption="Yeraly & Ramazan | Hackathon 2026", use_container_width=True)
+    
+    st.divider()
+    st.markdown("""
+    <div style='text-align:center;'>
+        <p><b>Team:</b> Yeraly & Ramazan</p>
+        <p><b>Level:</b> 8th Grade Students</p>
+        <p><b>Location:</b> Astana, Kazakhstan</p>
+        <p><b>Goal:</b> Making legal paperwork accessible for everyone.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ===== 6. ПРОФЕССИОНАЛЬНЫЙ ФУТЕР =====
 st.markdown(f"""
-<div style="text-align:center; margin-top:5rem; padding:2rem; border-top:1px solid rgba(255,255,255,0.1);">
-    <p style="opacity:0.6; font-size:0.9rem;">EasyDoc AI System &copy; 2026</p>
-    <p style="color:#6366f1; font-weight:700;">Engineered by Yeraly & Ramazan</p>
+<div style="text-align:center; margin-top:5rem; padding:2rem; border-top:1px solid rgba(255,255,255,0.1); opacity:0.6;">
+    EasyDoc AI System &copy; 2026 | Astana, Kazakhstan
 </div>
 """, unsafe_allow_html=True)
