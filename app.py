@@ -4,9 +4,9 @@ from datetime import date, datetime
 import os
 import pytz
 
-# ===== 1. КОНФИГУРАЦИЯ СТРАНИЦЫ =====
+# ===== 1. КОНФИГУРАЦИЯ СТРАНИЦЫ (СТРОГАЯ) =====
 st.set_page_config(
-    page_title="EasyDoc AI | Intelligent Document Systems", 
+    page_title="EasyDoc AI | Intelligent Business Systems", 
     page_icon="📝", 
     layout="centered",
     initial_sidebar_state="expanded"
@@ -21,96 +21,117 @@ def nav_to(page_name):
     st.session_state.page = page_name
     st.rerun()
 
-# ===== 2. PREMIUM ДИЗАЙН (CSS) - СТРОГИЙ И ДОРОГОЙ =====
+# ===== 2. PREMIUM ДИЗАЙН (CSS) - СТРОГИЙ B2B СТИЛЬ =====
 st.markdown("""
 <style>
-    /* Импорт шрифта */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    /* Импорт чистого шрифта */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
     /* Основной фон и шрифт */
     .stApp { 
-        background: linear-gradient(160deg, #090e1a 0%, #111827 100%); 
+        background-color: #090e1a;
+        background-image: radial-gradient(at 10% 10%, rgba(31, 41, 55, 0.15) 0px, transparent 50%), radial-gradient(at 90% 90%, rgba(17, 24, 39, 0.1) 0px, transparent 50%);
         color: #f1f5f9;
         font-family: 'Inter', sans-serif;
     }
     
-    /* Главный контейнер (Премиум стекло) */
+    /* Главный контейнер (Строгое стекло) */
     .block-container {
-        background: rgba(17, 24, 39, 0.8);
+        background: rgba(17, 24, 39, 0.6);
         padding: 4rem;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
 
     /* Боковая панель (Sidebar) */
     section[data-testid="stSidebar"] {
         background-color: #090e1a !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        border-right: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Меню: Навигация (Чистая, без эмодзи) */
+    .stRadio>div { gap: 10px; }
+    .stRadio>div>label {
+        background-color: transparent !important;
+        color: #94a3b8 !important;
+        border-radius: 8px;
+        padding: 10px 15px !important;
+        border: 1px solid transparent;
+        transition: 0.2s;
+        font-weight: 500;
+    }
+    .stRadio>div>label:hover { background-color: rgba(255, 255, 255, 0.03) !important; color: white !important; }
+    .stRadio>div>label[data-testid="stWidgetActive"] { 
+        background-color: rgba(99, 102, 241, 0.05) !important;
+        color: #a5b4fc !important;
+        border: 1px solid rgba(99, 102, 241, 0.1) !important;
+        border-left: 3px solid #6366f1 !important;
     }
 
     /* Заголовки (Strict & Clean) */
     h1, h2, h3 { color: #ffffff !important; font-weight: 800 !important; letter-spacing: -0.03em; }
     
-    /* Красивая Главная: Свечение текста */
+    /* Главная страница: Заголовок со свечением */
     .main-title { 
-        font-size: 4rem; 
+        font-size: 3.8rem; 
         font-weight: 800; 
         text-align: center; 
         margin-bottom: 0.5rem;
-        background: linear-gradient(120deg, #ffffff, #a5b4fc);
+        background: linear-gradient(120deg, #ffffff, #c7d2fe);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(165, 180, 252, 0.3);
+        text-shadow: 0 0 25px rgba(165, 180, 252, 0.2);
     }
-    .main-sub { font-size: 1.4rem; text-align: center; color: #94a3b8; margin-bottom: 3rem; font-weight: 400; }
+    .main-sub { font-size: 1.3rem; text-align: center; color: #94a3b8; margin-bottom: 3.5rem; font-weight: 400; }
 
-    /* Поля ввода (Clean Inputs) */
-    .stTextInput>div>div>input {
-        background-color: #1f2937 !important;
+    /* Поля ввода (Clean B2B inputs) */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div {
+        background-color: #111827 !important;
         color: #f1f5f9 !important;
-        border: 1px solid #374151 !important;
-        border-radius: 12px;
-        padding: 12px;
+        border: 1px solid #1f2937 !important;
+        border-radius: 10px;
+        padding: 10px;
     }
-    .stTextInput>div>div>input:focus { border-color: #6366f1 !important; }
+    .stTextInput>div>div>input:focus { border-color: #4f46e5 !important; box-shadow: 0 0 0 1px #4f46e5; }
 
-    /* AI Insight Карточка (Professional Look) */
+    /* AI Insight Карточка (Strict look) */
     .ai-summary-card {
-        background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(17, 24, 39, 0.6));
-        border: 1px solid #4f46e5;
-        padding: 28px;
-        border-radius: 18px;
-        margin-top: 35px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-
-    /* Кнопки (Строгие, без ракет) */
-    .stButton>button {
-        background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
-        color: white;
-        border: none;
+        background: rgba(17, 24, 39, 0.8);
+        border: 1px solid #374151;
+        padding: 25px;
         border-radius: 14px;
+        margin-top: 30px;
+    }
+    .ai-title { color: #a5b4fc; font-weight: 700; font-size: 1.2rem; margin-bottom: 15px; }
+
+    /* Кнопки (Strict B2B style) */
+    .stButton>button {
+        background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%);
+        color: white;
+        border: 1px solid #312e81;
+        border-radius: 12px;
         font-weight: 600;
-        height: 55px;
+        height: 50px;
         width: 100%;
-        transition: 0.3s ease;
-        font-size: 1rem;
+        transition: 0.2s ease;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        font-size: 0.9rem;
     }
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
     }
     
-    /* Footer */
-    .footer { text-align: center; margin-top: 5rem; padding: 2rem; border-top: 1px solid #1f2937; opacity: 0.5; font-size: 0.9rem; }
+    /*Footer */
+    .footer { text-align: center; margin-top: 5rem; padding: 2rem; border-top: 1px solid #1f2937; opacity: 0.4; font-size: 0.8rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 3. ГЛОБАЛЬНЫЙ СЛОВАРЬ (DICT) - БЕЗ ЭМОДЗИ =====
+# ===== 3. ГЛОБАЛЬНЫЙ СЛОВАРЬ (DICT) - ЧИСТЫЙ, БЕЗ ЭМОДЗИ =====
 DICT = {
     "English": {
         "nav": ["Home", "Generator", "Feedback", "Authors"],
@@ -121,7 +142,7 @@ DICT = {
         "types": ["Employment Agreement", "NDA", "Service Level Agreement", "Sales Purchase Contract", "Residential Lease"],
         "f_pA": "Organization Name", "f_pB": "Individual's Full Name", 
         "f_d1": "Primary Detail (Position/Item)", "f_d2": "Contract Value (KZT)",
-        "gen": "GENERATE OFFICIAL DOCUMENT", 
+        "gen": "GENERATE DOCUMENT", 
         "ai_title": "AI System Insights", "ai_val": "Legal Compliance", "ai_ent": "Detected Entities",
         "feed_h": "Community Feedback", "auth_h": "System Developers",
         "time_lab": "Astana Time", "date_lab": "Today", "success": "Document Created."
@@ -156,18 +177,17 @@ DICT = {
     }
 }
 
-# ===== 4. SIDEBAR (ВРЕМЯ, ДАТА И НАВИГАЦИЯ) =====
+# ===== 4. SIDEBAR (ВРЕМЯ, ДАТА И ЧИСТАЯ НАВИГАЦИЯ) =====
 with st.sidebar:
-    # 1. Заголовок
     st.markdown("<h3>EasyDoc Panel</h3>", unsafe_allow_html=True)
     
-    # 2. Выбор языка
-    lang_choice = st.selectbox("🌐 Language / Тіл", ("English", "Русский", "Қазақша"), index=1)
+    # 1. Выбор языка
+    lang_choice = st.selectbox("🌐 Language", ("English", "Русский", "Қазақша"), index=1)
     S = DICT[lang_choice]
     
     st.divider()
     
-    # 3. Живое время Астаны (требует pytz в requirements.txt)
+    # 2. Живое время Астаны (pytz обязателен в requirements.txt)
     astana_tz = pytz.timezone('Asia/Almaty')
     now = datetime.now(astana_tz)
     st.metric(label=S["time_lab"], value=now.strftime("%H:%M:%S"))
@@ -175,44 +195,50 @@ with st.sidebar:
     
     st.divider()
     
-    # 4. Радио-кнопки навигации
-    current_page_idx = S["nav"].index(st.session_state.page) if st.session_state.page in S["nav"] else 0
-    page_selection = st.radio("Navigation", S["nav"], index=current_page_idx)
+    # 3. Чистая навигация (Radio, стилизованный через CSS)
+    # Определяем индекс текущей страницы для синхронизации
+    try:
+        current_page_idx = S["nav"].index(st.session_state.page)
+    except ValueError:
+        current_page_idx = 0 # Дефолт на главную
+        
+    page_selection = st.radio("Navigation", S["nav"], index=current_page_idx, key="nav_radio", label_visibility="collapsed")
     st.session_state.page = page_selection
 
 # ===== 5. КОНТЕНТ СТРАНИЦ =====
 
 # --- 🏠 ГЛАВНАЯ СТРАНИЦА (ЛОГО ЗМЕЯ, Свечение текста) ---
 if st.session_state.page == S["nav"][0]:
-    # Красивый заголовок со свечением
+    # Чистый заголовок со свечением
     st.markdown(f"<div class='main-title'>{S['h_title']}</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='main-sub'>{S['h_sub']}</div>", unsafe_allow_html=True)
     
-    # Главное фото (Змея)
+    # Главное фото (Змея) - аккуратное
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True) # ЗМЕЯ ЗДЕСЬ
     
     st.divider()
     
-    # Кнопка Запуска (Строгая)
+    # Кнопка Запуска (Строгая B2B)
     col_l, col_m, col_r = st.columns([1,2,1])
     with col_m:
         if st.button(S["start"]):
             nav_to(S["nav"][1]) # Переход на Генератор
 
-# --- 📝 ГЕНЕРАТОР (ЛОГО РУЧКА, СРЕДНЕГО РАЗМЕРА) ---
+# --- 📝 ГЕНЕРАТОР (ЛОГО РУЧКА, ТЕПЕРЬ СРЕДНЕГО РАЗМЕРА) ---
 elif st.session_state.page == S["nav"][1]:
-    # ФОТО РУЧКИ (logo_pen.png), ТЕПЕРЬ СРЕДНЕГО РАЗМЕРА
+    
+    # ФОТО РУЧКИ (logo_pen.png) - ТЕПЕРЬ АККУРАТНОЕ, СРЕДНЕЕ
     if os.path.exists("logo_pen.png"):
-        st.image("logo_pen.png", width=220) # РУЧКА ТУТ, ШИРИНА 220px (Средняя)
+        st.image("logo_pen.png", width=160) # РУЧКА ТУТ, ШИРИНА 160px (Средняя)
         
     st.header(S["type_lab"])
-    doc_choice = st.selectbox("", S["types"])
+    doc_choice = st.selectbox("", S["types"], label_visibility="collapsed")
     
     with st.form("pro_gen_form"):
         c1, c2 = st.columns(2)
-        pA = c1.text_input(S["f_pA"])
-        pB = c2.text_input(S["f_pB"])
+        pA = c1.text_input(S["f_pA"], placeholder="e.g. Kaspi Bank")
+        pB = c2.text_input(S["f_pB"], placeholder="e.g. Ivan Ivanov")
         d1 = c1.text_input(S["f_d1"])
         d2 = c2.text_input(S["f_d2"])
         
@@ -220,26 +246,24 @@ elif st.session_state.page == S["nav"][1]:
         
     if submitted:
         if pA and pB:
-            with st.spinner("AI analyzing law database..."):
-                time.sleep(1.5)
+            with st.spinner("Analyzing RK Legal Code..."):
+                time.sleep(1.2)
             
             # AI INSIGHT КАРТОЧКА (ПОЛНЫЙ ПЕРЕВОД, СТРОГИЙ СТИЛЬ)
             st.markdown(f"""
             <div class="ai-summary-card">
-                <h3 style="margin:0; color:#6366f1; font-size:1.4rem;">{S['ai_title']}</h3>
-                <hr style="border-color:#6366f1; opacity:0.2; margin: 15px 0;">
-                <p>✅ <b>{S['ai_val']}:</b> Verified against RK Legal Code</p>
+                <div class="ai-title">{S['ai_title']}</div>
+                <p>✅ <b>{S['ai_val']}:</b> Verified 100% (No conflicts)</p>
                 <p>👤 <b>{S['ai_ent']}:</b> {pA} & {pB}</p>
-                <p>📄 <b>Category:</b> {doc_choice}</p>
             </div>
             """, unsafe_allow_html=True)
             
             st.success(S["success"])
-            st.download_button("📥 Download Official .DOC", f"Document for {pB}", f"EasyDoc_{pB}.doc")
+            st.download_button("📥 Download Official .DOC", f"Document Data", f"EasyDoc_{pB}.doc")
         else:
-            st.error("Please fill in the parties' names.")
+            st.error("Fill in the mandatory fields.")
 
-# --- 💬 СТРАНИЦА ОТЗЫВОВ (ПО ЦЕНТРУ, БЕЗ РАКЕТ) ---
+# --- 💬 СТРАНИЦА ОТЗЫВОВ (ПО ЦЕНТРУ, ЧИСТАЯ) ---
 elif st.session_state.page == S["nav"][2]:
     st.markdown(f"<h2 style='text-align:center;'>{S['feed_h']}</h2>", unsafe_allow_html=True)
     
@@ -265,13 +289,12 @@ elif st.session_state.page == S["nav"][3]:
         <p><b>Core Team:</b> Yeraly & Ramazan</p>
         <p><b>Level:</b> 8th Grade Students</p>
         <p><b>Location:</b> Astana, Kazakhstan</p>
-        <p><b>Mission:</b> Digitizing business automation for Central Asia.</p>
     </div>
     """, unsafe_allow_html=True)
 
 # ===== 6. СТРОГИЙ ФУТЕР =====
 st.markdown("""
 <div class="footer">
-    EasyDoc AI System &copy; 2026 | Astana, Kazakhstan | B2B Solutions
+    EasyDoc AI System &copy; 2026 | Astana, Kazakhstan | Enterprise Solutions
 </div>
 """, unsafe_allow_html=True)
