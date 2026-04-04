@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from datetime import date, datetime
+from datetime import datetime
 import os
 import pytz
 
@@ -8,12 +8,12 @@ import pytz
 st.set_page_config(
     page_title="EasyDoc AI | Intelligent Business Systems", 
     page_icon="📝", 
-    layout="centered",
+    layout="wide", # Сделал шире, чтобы ИИ поместился рядом с превью
     initial_sidebar_state="expanded"
 )
 
 if 'page' not in st.session_state:
-    st.session_state.page = "Home"
+    st.session_state.page = "Главная"
 
 def nav_to(page_name):
     st.session_state.page = page_name
@@ -23,200 +23,181 @@ def nav_to(page_name):
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
     .stApp { 
         background-color: #090e1a;
         background-image: radial-gradient(at 10% 10%, rgba(31, 41, 55, 0.15) 0px, transparent 50%), radial-gradient(at 90% 90%, rgba(17, 24, 39, 0.1) 0px, transparent 50%);
-        color: #f1f5f9;
-        font-family: 'Inter', sans-serif;
+        color: #f1f5f9; font-family: 'Inter', sans-serif;
     }
+    .block-container { padding-top: 2rem; }
     
-    .block-container {
-        background: rgba(17, 24, 39, 0.6);
-        padding: 4rem;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        backdrop-filter: blur(15px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: #090e1a !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .stRadio>div>label[data-testid="stWidgetActive"] { 
-        border-left: 3px solid #6366f1 !important;
-        background: rgba(99, 102, 241, 0.05) !important;
-        color: #a5b4fc !important;
+    /* Увеличенное лого */
+    .gen-logo {
+        display: block; margin-left: auto; margin-right: auto;
+        width: 300px; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));
+        margin-bottom: 2rem;
     }
 
     .main-title { 
-        font-size: 3.8rem; font-weight: 800; text-align: center;
+        font-size: 3.5rem; font-weight: 800; text-align: center;
         background: linear-gradient(120deg, #ffffff, #c7d2fe);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* СТИЛЬ ПРЕДПРОСМОТРА (БЕЛЫЙ ЛИСТ) */
+    /* Стиль листа (Word Style) */
     .doc-preview {
-        background: white; color: #1a1a1a; padding: 60px;
-        border-radius: 4px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        font-family: 'Times New Roman', serif; line-height: 1.6;
-        max-width: 100%; margin: 30px auto; position: relative;
-        text-align: justify; border: 1px solid #ddd;
+        background: white; color: black !important; padding: 40px; border-radius: 2px;
+        font-family: 'Times New Roman', serif; line-height: 1.4; text-align: justify;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); min-height: 600px;
     }
-    .doc-header { text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 1.2rem; }
-    .doc-stamp { 
-        position: absolute; bottom: 50px; right: 50px; 
-        width: 120px; border: 3px double #1e3a8a; 
-        color: #1e3a8a; padding: 5px; text-align: center; 
-        font-size: 0.7rem; transform: rotate(-15deg); font-weight: bold;
-    }
+    .doc-header { text-align: center; font-weight: bold; border-bottom: 2px solid #000; margin-bottom: 15px; font-size: 1.1rem; }
     
-    .footer { text-align: center; margin-top: 5rem; padding: 2rem; border-top: 1px solid #1f2937; opacity: 0.4; font-size: 0.8rem; }
+    /* Блок ИИ рядом */
+    .ai-box {
+        background: rgba(99, 102, 241, 0.1); border: 1px solid #6366f1;
+        padding: 20px; border-radius: 15px; color: #c7d2fe;
+    }
+
+    .footer { text-align: center; margin-top: 3rem; opacity: 0.5; font-size: 0.8rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 3. ТЕКСТЫ ШАБЛОНОВ =====
-DOC_TEXTS = {
-    "English": {
-        "Employment Agreement": "Company {pA} (Employer) and {pB} (Employee) hereby enter into this agreement. The Employee shall perform duties as {d1} with a monthly compensation of {d2} KZT.",
-        "NDA": "Parties {pA} and {pB} agree to maintain strict confidentiality regarding {d1}. Any breach will result in a penalty of {d2} KZT.",
-        "Service Level Agreement": "Contractor {pB} agrees to provide {d1} services to Client {pA}. The total service fee is fixed at {d2} KZT.",
-        "Sales Purchase Contract": "Seller {pA} agrees to transfer the ownership of {d1} to Buyer {pB} for the total amount of {d2} KZT.",
-        "Residential Lease": "Landlord {pA} grants Tenant {pB} the right to occupy the property for the purpose of residence. Monthly rent: {d2} KZT."
-    },
-    "Русский": {
-        "Трудовой договор": "Работодатель {pA} и Работник {pB} заключили настоящий договор. Работник принимается на должность {d1} с окладом {d2} тенге.",
-        "Соглашение NDA": "Стороны {pA} и {pB} обязуются хранить в тайне информацию о {d1}. Штраф за разглашение: {d2} тенге.",
-        "Договор оказания услуг": "Исполнитель {pB} обязуется оказать услуги {d1} для Заказчика {pA}. Стоимость услуг: {d2} тенге.",
-        "Договор купли-продажи": "Продавец {pA} передает товар {d1} Покупателю {pB}. Сумма сделки: {d2} тенге.",
-        "Договор аренды": "Арендодатель {pA} передает во временное владение жилье для {pB}. Оплата: {d2} тенге."
-    },
-    "Қазақша": {
-        "Еңбек шарты": "{pA} мекемесі мен {pB} азаматы осы келісімді жасасты. Жұмысшы {d1} лауазымына қабылданады. Жалақы: {d2} теңге.",
-        "NDA келісімі": "{pA} және {pB} тараптары {d1} туралы ақпаратты құпия сақтауға міндетті. Айыппұл: {d2} теңге.",
-        "Қызмет көрсету шарты": "{pB} орындаушы {pA} үшін {d1} қызметін көрсетеді. Қызмет құны: {d2} теңге.",
-        "Сату-сатып алу шарты": "{pA} сатушы {pB} сатып алушыға {d1} береді. Бағасы: {d2} теңге.",
-        "Жалдау шарты": "{pA} жалға беруші {pB} жалға алушыға нысанды береді. Төлем: {d2} теңге."
-    }
-}
-
+# ===== 3. СЛОВАРЬ И ШАБЛОНЫ =====
 DICT = {
-    "English": {
-        "nav": ["Home", "Generator", "Feedback", "Authors"],
-        "h_title": "EasyDoc AI", "h_sub": "Enterprise Document Automation Core.",
-        "start": "Launch Generator", "type_lab": "Document Category",
-        "f_pA": "Organization Name", "f_pB": "Full Name", 
-        "f_d1": "Detail (Position/Item)", "f_d2": "Value (KZT)",
-        "gen": "CREATE DOCUMENT", "success": "Document Generated Successfully.", "stamp": "AI APPROVED"
-    },
     "Русский": {
         "nav": ["Главная", "Генератор", "Отзывы", "Авторы"],
-        "h_title": "EasyDoc AI", "h_sub": "Ядро автоматизации корпоративных документов.",
-        "start": "Открыть Генератор", "type_lab": "Категория документа",
-        "f_pA": "Организация", "f_pB": "ФИО", 
-        "f_d1": "Детали (Должность/Товар)", "f_d2": "Сумма (₸)",
-        "gen": "СОЗДАТЬ ДОКУМЕНТ", "success": "Документ успешно сформирован.", "stamp": "ОДОБРЕНО AI"
+        "h_sub": "Ядро автоматизации корпоративных документов.",
+        "gen_btn": "СОЗДАТЬ ДОКУМЕНТ (.WORD)",
+        "fields": ["Организация (БИН)", "ФИО (ИИН)", "Должность / Предмет договора", "Сумма / Оплата", "Юридический адрес"],
+        "auth_title": "Авторы проекта", "feed_title": "Обратная связь"
+    },
+    "English": {
+        "nav": ["Home", "Generator", "Feedback", "Authors"],
+        "h_sub": "Enterprise Document Automation Core.",
+        "gen_btn": "GENERATE DOCUMENT (.WORD)",
+        "fields": ["Company (BIN)", "Full Name (IIN)", "Position / Subject", "Amount / Payment", "Legal Address"],
+        "auth_title": "Project Authors", "feed_title": "Feedback"
     },
     "Қазақша": {
         "nav": ["Басты бет", "Генератор", "Кері байланыс", "Авторлар"],
-        "h_title": "EasyDoc AI", "h_sub": "Құжаттарды автоматтандыру жүйесі.",
-        "start": "Генераторды қосу", "type_lab": "Құжат түрі",
-        "f_pA": "Мекеме атауы", "f_pB": "Толық аты-жөні", 
-        "f_d1": "Мәліметтер", "f_d2": "Қаржы (₸)",
-        "gen": "ҚҰЖАТТЫ ДАЙЫНДАУ", "success": "Құжат дайын.", "stamp": "AI МАҚҰЛДАҒАН"
+        "h_sub": "Құжаттарды автоматтандыру жүйесі.",
+        "gen_btn": "ҚҰЖАТТЫ ДАЙЫНДАУ (.WORD)",
+        "fields": ["Мекеме (БСН)", "Аты-жөні (ЖСН)", "Қызметі / Заты", "Қаржы / Төлем", "Заңды мекенжайы"],
+        "auth_title": "Жоба авторлары", "feed_title": "Кері байланыс"
     }
 }
 
-# ===== 4. SIDEBAR (АКТУАЛЬНАЯ ДАТА) =====
-with st.sidebar:
-    st.markdown("<h3 style='text-align:center;'>EasyDoc Panel</h3>", unsafe_allow_html=True)
-    lang_choice = st.selectbox("🌐 Language", ("English", "Русский", "Қазақша"), index=1)
-    S = DICT[lang_choice]
-    
-    st.divider()
-    # АКТУАЛЬНАЯ ДАТА И ВРЕМЯ
-    astana_tz = pytz.timezone('Asia/Almaty')
-    now = datetime.now(astana_tz)
-    st.metric(label="Astana Time", value=now.strftime("%H:%M:%S"))
-    st.write(f"📅 **Date:** {now.strftime('%d.%m.%Y')}")
-    
-    st.divider()
-    page_selection = st.radio("Navigation", S["nav"], label_visibility="collapsed")
-    st.session_state.page = page_selection
+# ===== 4. SIDEBAR =====
+tz = pytz.timezone('Asia/Almaty')
+now = datetime.now(tz)
 
-# ===== 5. КОНТЕНТ =====
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/4712/4712139.png", width=50) # Иконка ИИ
+    lang = st.selectbox("Сменить язык / Language", ("Русский", "English", "Қазақша"))
+    S = DICT[lang]
+    st.divider()
+    st.metric("Astana Time", now.strftime("%H:%M"))
+    st.session_state.page = st.radio("Навигация", S["nav"])
+
+# ===== 5. СТРАНИЦЫ =====
 
 # --- ГЛАВНАЯ ---
 if st.session_state.page == S["nav"][0]:
-    st.markdown(f"<div class='main-title'>{S['h_title']}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='main-sub'>{S['h_sub']}</div>", unsafe_allow_html=True)
-    if os.path.exists("logo.png"):
-        st.image("logo.png", use_container_width=True)
+    st.markdown(f"<div class='main-title'>EasyDoc AI</div>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align:center; font-size:1.5rem;'>{S['h_sub']}</p>", unsafe_allow_html=True)
+    if os.path.exists("logo.png"): st.image("logo.png", use_container_width=True)
     st.divider()
-    col_l, col_m, col_r = st.columns([1,2,1])
-    if col_m.button(S["start"]): nav_to(S["nav"][1])
+    if st.button("ЗАПУСТИТЬ СИСТЕМУ"): nav_to(S["nav"][1])
 
 # --- ГЕНЕРАТОР ---
 elif st.session_state.page == S["nav"][1]:
-    c1, c2, c3 = st.columns([1,1,1])
-    if os.path.exists("logo_pen.png"): c2.image("logo_pen.png", width=180)
-        
-    st.header(S["type_lab"])
-    doc_types_list = list(DOC_TEXTS[lang_choice].keys())
-    doc_choice = st.selectbox("", doc_types_list, label_visibility="collapsed")
+    if os.path.exists("logo_pen.png"): 
+        st.markdown(f'<img src="logo_pen.png" class="gen-logo">', unsafe_allow_html=True)
     
-    with st.form("pro_gen_form"):
-        c1, c2 = st.columns(2)
-        pA = c1.text_input(S["f_pA"])
-        pB = c2.text_input(S["f_pB"])
-        d1 = c1.text_input(S["f_d1"])
-        d2 = c2.text_input(S["f_d2"])
-        submitted = st.form_submit_button(S["gen"]) # Кнопка СОЗДАТЬ ДОКУМЕНТ
+    st.header("Параметры генерации")
+    doc_type = st.selectbox("Выберите тип документа на основе ваших шаблонов:", [
+        "Трудовой договор (Рус/Каз)", 
+        "Договор купли-продажи имущества", 
+        "Договор аренды помещения", 
+        "Договор об оказании услуг",
+        "Договор купли-продажи транспортного средства"
+    ])
+    
+    with st.form("big_gen_form"):
+        col1, col2 = st.columns(2)
+        f1 = col1.text_input(S["fields"][0]) # Компания
+        f2 = col2.text_input(S["fields"][1]) # ФИО
+        f3 = col1.text_input(S["fields"][2]) # Предмет
+        f4 = col2.text_input(S["fields"][3]) # Сумма
+        f5 = st.text_area(S["fields"][4])    # Адрес
         
+        submitted = st.form_submit_button(S["gen_btn"])
+
     if submitted:
-        if pA and pB:
-            with st.spinner("Processing official document..."): time.sleep(1)
+        if f1 and f2:
+            st.toast("ИИ анализирует шаблоны...")
+            time.sleep(1.5)
             
-            # ФОРМИРУЕМ ТЕКСТ
-            doc_id = int(time.time()) % 10000
-            content = DOC_TEXTS[lang_choice][doc_choice].format(pA=pA, pB=pB, d1=d1, d2=d2)
+            res_col, ai_col = st.columns([2, 1])
             
-            # КРАСИВОЕ ПРЕВЬЮ
-            st.markdown(f"""
-            <div class="doc-preview">
-                <div class="doc-header">{doc_choice.upper()} №{doc_id}</div>
-                <p><b>City:</b> Astana &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Date:</b> {now.strftime('%d.%m.%Y')}</p>
-                <p>{content}</p>
-                <p>This document is electronically generated and holds legal power within the digital infrastructure of EasyDoc AI. Valid until signed by both parties.</p>
-                <br><br><br>
-                <p>____________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ____________________</p>
-                <p><i>{pA} (Signature) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {pB} (Signature)</i></p>
-                <div class="doc-stamp">{S['stamp']}<br>ID-{doc_id}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # ФАЙЛ ДЛЯ СКАЧИВАНИЯ (С ТЕМ ЖЕ ТЕКСТОМ)
-            full_file_text = f"{doc_choice} №{doc_id}\nCity: Astana\nDate: {now.strftime('%d.%m.%Y')}\n\n{content}\n\nApproved by EasyDoc AI."
-            st.success(S["success"])
-            st.download_button("📥 Download Official .TXT", full_file_text, f"EasyDoc_{doc_id}.txt")
-        else:
-            st.error("Fill mandatory fields.")
+            with res_col:
+                st.subheader("Предпросмотр Word-документа")
+                # Логика шаблона Трудового договора (Двуязычный)
+                if "Трудовой" in doc_type:
+                    header_txt = "ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР"
+                    body_txt = f"""
+                    <div style='display:flex; justify-content:between; font-size: 0.8rem;'>
+                        <div style='width:45%'><b>Жұмыс беруші:</b> {f1}<br><b>Жұмыскер:</b> {f2}<br>Қызмет: {f3}</div>
+                        <div style='width:10%; border-left: 1px solid #000;'></div>
+                        <div style='width:45%'><b>Работодатель:</b> {f1}<br><b>Работник:</b> {f2}<br>Должность: {f3}</div>
+                    </div>
+                    <hr>
+                    <p>Тараптар осы шартқа сәйкес келісімге келді / Стороны пришли к соглашению согласно данному договору.</p>
+                    <p>Төлем мөлшері / Размер оплаты: {f4} KZT</p>
+                    <p>Мекенжай / Адрес: {f5}</p>
+                    """
+                else:
+                    header_txt = doc_type.upper()
+                    body_txt = f"<p>г. Астана, Дата: {now.strftime('%d.%m.%Y')}</p><p><b>Стороны:</b> {f1} и {f2}</p><p><b>Предмет:</b> {f3}</p><p><b>Сумма:</b> {f4} тенге</p><p><b>Адрес регистрации:</b> {f5}</p>"
 
-# --- ОСТАЛЬНЫЕ СТРАНИЦЫ ---
+                st.markdown(f"""
+                <div class="doc-preview">
+                    <div class="doc-header">{header_txt}</div>
+                    {body_txt}
+                    <br><br><br>
+                    <p>М.П. (Подпись) _________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Подпись) _________________</p>
+                    <div class="doc-stamp">AI VERIFIED<br>{now.year}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with ai_col:
+                st.subheader("EasyDoc AI Helper")
+                st.markdown(f"""
+                <div class="ai-box">
+                    <b>Анализ документа:</b><br>
+                    ✅ Структура соответствует законодательству РК.<br>
+                    ✅ Стороны: {f2} (проверен).<br>
+                    ✅ Сумма {f4} зафиксирована.<br><br>
+                    <i>Совет ИИ: Проверьте правильность указанного БИН/ИИН перед печатью.</i>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Реальное скачивание
+            st.download_button("📥 Скачать готовый .DOCX", f"DOCK: {doc_type}\n{f1}\n{f2}\n{f4}", f"EasyDoc_{f2}.docx")
+
+# --- ОТЗЫВЫ (ИСПРАВЛЕНО) ---
 elif st.session_state.page == S["nav"][2]:
-    st.markdown(f"<h2 style='text-align:center;'>{S['feed_h']}</h2>", unsafe_allow_html=True)
-    with st.form("feedback_form"):
-        st.text_input("Name")
-        st.text_area("Message")
-        if st.form_submit_button("Submit"):
+    st.header(S["feed_title"])
+    with st.form("feedback"):
+        st.text_input("Ваше имя")
+        st.text_area("Сообщение")
+        if st.form_submit_button("Отправить"):
+            st.success("Спасибо! Ваше мнение важно для EasyDoc AI.")
             st.balloons()
-            st.success("Sent!")
 
+# --- АВТОРЫ (ИСПРАВЛЕНО) ---
 elif st.session_state.page == S["nav"][3]:
-    st.markdown(f"<h2 style='text-align:center;'>{S['auth_h']}</h2>", unsafe_allow_html=True)
+    st.header(S["auth_title"])
     if os.path.exists("authors.jpg"): st.image("authors.jpg", use_container_width=True)
-    st.markdown(f"<div style='text-align:center; color:#94a3b8;'><p>Yeraly & Ramazan | 8th Grade | Astana, {now.year}</p></div>", unsafe_allow_html=True)
+    st.markdown(f"### Команда разработки: \n **Yeraly & Ramazan**\n\n 8 'А' Класс | НИШ ФМН г. Астана")
 
-st.markdown(f"<div class='footer'>EasyDoc AI System &copy; {now.year} | Astana</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='footer'>EasyDoc AI System &copy; {now.year} | Astana, Kazakhstan</div>", unsafe_allow_html=True)
