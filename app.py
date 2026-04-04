@@ -380,4 +380,4 @@ def create_docx(doc_id, data, lang):
     
     cell_left = table.cell(0, 0)
     p_left = cell_left.paragraphs[0]
-    set_font(p_left.add_run(f"{data.get('p1')
+    set_font(p_left.add_run(f"{data.get('p1'
