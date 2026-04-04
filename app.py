@@ -15,6 +15,13 @@ st.set_page_config(page_title="EasyDoc AI", page_icon="📝", layout="wide")
 if 'page' not in st.session_state:
     st.session_state.page = "Главная"
 
+# Инициализируем хранилище для отзывов, чтобы они не пропадали
+if 'feedbacks' not in st.session_state:
+    st.session_state.feedbacks = [
+        {"name": "Алексей", "text": "Отличное приложение! Сэкономило кучу времени при оформлении аренды.", "date": "01.04.2026"},
+        {"name": "Айбек", "text": "Өте ыңғайлы екен, рахмет! Қазақша үлгілердің болғаны қуантады.", "date": "03.04.2026"}
+    ]
+
 def nav_to(page_name):
     st.session_state.page = page_name
     st.rerun()
@@ -28,7 +35,7 @@ translations = {
         "run_btn": "🚀 ЗАПУСТИТЬ ГЕНЕРАТОР",
         "date": "Дата", "time": "Время",
         "gen_header": "⚙️ Настройка шаблона", "doc_type": "Выберите тип документа:",
-        "address": "Юридические адреса, контакты и банковские реквизиты сторон (IBAN, Банк)",
+        "address": "Юридические адреса, контакты и банковские реквизиты сторон (IBAN, Банк, БИН/ИИН)",
         "submit": "✨ СОЗДАТЬ ДОКУМЕНТ", "download": "📥 СКАЧАТЬ WORD (.DOCX)",
         "feedback": "Обратная связь", "name": "Имя", "review": "Ваш отзыв",
         "send": "Отправить", "thanks": "✅ Спасибо за отзыв!",
@@ -46,16 +53,16 @@ translations = {
             "car": "🚗 Договор купли-продажи ТС (Авто)"
         },
         "fields": {
-            "p1_labor": "Работодатель (Название + БИН)", "p2_labor": "Работник (ФИО + ИИН)",
-            "p1_prop": "Продавец (ФИО/Организация)", "p2_prop": "Покупатель (ФИО/Организация)",
-            "p1_rent": "Арендодатель (ФИО/Организация)", "p2_rent": "Арендатор (ФИО/Организация)",
-            "p1_serv": "Заказчик (ФИО/Организация)", "p2_serv": "Исполнитель (ФИО/Организация)",
-            "p1_car": "Продавец ТС (ФИО + ИИН)", "p2_car": "Покупатель ТС (ФИО + ИИН)",
-            "d1_labor": "Должность работника", "d2_labor": "Оклад (цифрами и прописью)", "d3_labor": "Срок договора",
-            "d1_prop": "Описание имущества", "d2_prop": "Стоимость имущества", "d3_prop": "Срок передачи",
-            "d1_rent": "Адрес помещения", "d2_rent": "Арендная плата", "d3_rent": "Срок аренды",
-            "d1_serv": "Описание услуг", "d2_serv": "Сумма договора", "d3_serv": "Срок оказания",
-            "d1_car": "Марка, Модель, Год", "d2_car": "Цена авто", "d3_car": "Гос. номер и VIN код"
+            "p1_labor": "Работодатель (Название компании и БИН)", "p2_labor": "Работник (ФИО и ИИН)",
+            "p1_prop": "Продавец (ФИО / Организация)", "p2_prop": "Покупатель (ФИО / Организация)",
+            "p1_rent": "Арендодатель (ФИО / Организация)", "p2_rent": "Арендатор (ФИО / Организация)",
+            "p1_serv": "Заказчик (ФИО / Организация)", "p2_serv": "Исполнитель (ФИО / Организация)",
+            "p1_car": "Продавец ТС (ФИО и ИИН)", "p2_car": "Покупатель ТС (ФИО и ИИН)",
+            "d1_labor": "Должность работника", "d2_labor": "Оклад (цифрами и прописью)", "d3_labor": "Срок договора (например, на 1 год)",
+            "d1_prop": "Описание имущества (название, характеристики)", "d2_prop": "Стоимость имущества (в тенге)", "d3_prop": "Срок передачи имущества",
+            "d1_rent": "Адрес и описание помещения", "d2_rent": "Ежемесячная арендная плата (в тенге)", "d3_rent": "Срок аренды",
+            "d1_serv": "Подробное описание услуг", "d2_serv": "Общая сумма договора (в тенге)", "d3_serv": "Срок оказания услуг",
+            "d1_car": "Марка, Модель, Год выпуска ТС", "d2_car": "Цена автомобиля (в тенге)", "d3_car": "Гос. номер и VIN код"
         }
     },
     "English": {
@@ -134,12 +141,11 @@ translations = {
     }
 }
 
-# ===== 3. CSS ДИЗАЙН (С НОВЫМ ФОНОМ) =====
+# ===== 3. CSS ДИЗАЙН =====
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-    /* Новые анимации из ваших скриншотов */
     @keyframes gradientShift {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -152,7 +158,7 @@ st.markdown("""
     }
 
     .stApp {
-        background: #050816; /* Глубокий темный фон как основа */
+        background: #050816;
         background-image: 
             radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
             radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 40%);
@@ -163,7 +169,6 @@ st.markdown("""
         min-height: 100vh;
     }
 
-    /* Псевдоэлемент для "живого" вращающегося свечения */
     .stApp::before {
         content: '';
         position: fixed;
@@ -190,7 +195,6 @@ st.markdown("""
         border-right: 1px solid rgba(99, 102, 241, 0.1);
     }
 
-    /* Остальные стили */
     .main-title {
         font-size: 4.5rem; font-weight: 800; text-align: center;
         background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 50%, #818cf8 100%);
@@ -227,185 +231,153 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ===== 4. ГЕНЕРАЦИЯ WORD =====
+# ===== 4. ФУНКЦИЯ ПРОФЕССИОНАЛЬНОЙ ГЕНЕРАЦИИ WORD =====
 def create_docx(doc_id, data, lang):
     doc = Document()
+    
+    # Настройки шрифта по умолчанию (Times New Roman, как в ваших образцах)
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
     style.font.size = Pt(12)
+    
     date_str = datetime.now().strftime('%d.%m.%Y')
+    
+    def set_font(run, size=12, bold=False):
+        run.font.name = 'Times New Roman'
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        run.font.color.rgb = RGBColor(0, 0, 0)
 
+    # 1. ТРУДОВОЙ ДОГОВОР (ДВУЯЗЫЧНЫЙ)
     if doc_id == "labor":
-        heading = doc.add_heading("ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР", level=1)
-        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for run in heading.runs:
-            run.font.size = Pt(16)
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        p = doc.add_paragraph()
-        p.add_run("Астана қ. / г. Астана").bold = True
-        p.add_run(f"\t\t\t\t\t\t{date_str} ж/г.")
-        doc.add_paragraph("")
-        p2 = doc.add_paragraph()
-        p2.add_run("Работодатель / Жұмыс беруші: ").bold = True
-        p2.add_run(data.get('p1', ''))
-        p3 = doc.add_paragraph()
-        p3.add_run("Работник / Жұмыскер: ").bold = True
-        p3.add_run(data.get('p2', ''))
-        doc.add_paragraph("")
-        h2 = doc.add_heading('1. Предмет / Шарттың мәні', level=2)
-        for run in h2.runs:
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        doc.add_paragraph(f"Принять на работу на должность / Лауазымы: {data.get('d1', '')}")
-        h3 = doc.add_heading('2. Оплата и Сроки / Төлем және Мерзімдері', level=2)
-        for run in h3.runs:
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        doc.add_paragraph(f"Оклад / Жалақы: {data.get('d2', '')} KZT.")
-        doc.add_paragraph(f"Срок / Мерзімі: {data.get('d3', '')}")
+        title = doc.add_paragraph()
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        set_font(title.add_run("ЕҢБЕК ШАРТЫ / ТРУДОВОЙ ДОГОВОР\n"), 14, True)
+        
+        header_p = doc.add_paragraph()
+        set_font(header_p.add_run("Астана қ. / г. Астана"), 12, True)
+        header_p.add_run(f"\t\t\t\t\t\t«___» ________ 20___ ж./г.")
+        
+        parties = doc.add_paragraph()
+        parties.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        set_font(parties.add_run(f"{data.get('p1', 'Работодатель')}"), 12, True)
+        set_font(parties.add_run(", бұдан әрі «Жұмыс беруші», және "), 12)
+        set_font(parties.add_run(f"{data.get('p2', 'Работник')}"), 12, True)
+        set_font(parties.add_run(", бұдан әрі «Жұмыскер», төмендегідей осы Еңбек шартын жасасты:\n\n"), 12)
+        
+        set_font(parties.add_run(f"{data.get('p1', 'Работодатель')}"), 12, True)
+        set_font(parties.add_run(", именуемое в дальнейшем «Работодатель», и "), 12)
+        set_font(parties.add_run(f"{data.get('p2', 'Работник')}"), 12, True)
+        set_font(parties.add_run(", именуемый(ая) в дальнейшем «Работник», заключили настоящий Трудовой договор о нижеследующем:"), 12)
+        
+        # Разделы договора
+        sections = [
+            ("1. Шарттың мәні / Предмет договора", 
+             f"Жұмыс беруші Жұмыскерді мына лауазымға қабылдайды: {data.get('d1', 'Лауазымы')}.\nРаботодатель принимает Работника на должность: {data.get('d1', 'Должность')}."),
+            ("2. Шарттың мерзімі / Срок договора", 
+             f"Осы шарт мына мерзімге жасалды: {data.get('d3', 'Мерзім')}.\nНастоящий договор заключен на срок: {data.get('d3', 'Срок')}."),
+            ("3. Еңбекке ақы төлеу / Оплата труда", 
+             f"Жұмыскерге белгіленген жалақы мөлшері: {data.get('d2', 'Жалақы')} теңге.\nРаботнику устанавливается оклад в размере: {data.get('d2', 'Оклад')} тенге.")
+        ]
+        
+        for sec_title, sec_text in sections:
+            p_title = doc.add_paragraph()
+            set_font(p_title.add_run(f"\n{sec_title}"), 12, True)
+            p_text = doc.add_paragraph()
+            p_text.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            set_font(p_text.add_run(sec_text), 12)
+
+    # 2. ОСТАЛЬНЫЕ ДОГОВОРЫ (РУССКИЙ/КАЗАХСКИЙ/АНГЛИЙСКИЙ)
     else:
         titles = {
-            "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ", "rent": "ДОГОВОР АРЕНДЫ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТС"},
-            "English": {"prop": "SALE AND PURCHASE AGREEMENT", "rent": "LEASE AGREEMENT", "serv": "SERVICES AGREEMENT", "car": "VEHICLE SALE AGREEMENT"},
-            "Қазақша": {"prop": "САТЫП АЛУ-САТУ ШАРТЫ", "rent": "ЖАЛДАУ ШАРТЫ", "serv": "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", "car": "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ"}
+            "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ ИМУЩЕСТВА", "rent": "ДОГОВОР АРЕНДЫ ПОМЕЩЕНИЯ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТРАНСПОРТНОГО СРЕДСТВА"},
+            "English": {"prop": "PROPERTY SALE AGREEMENT", "rent": "LEASE AGREEMENT", "serv": "SERVICES AGREEMENT", "car": "VEHICLE SALE AGREEMENT"},
+            "Қазақша": {"prop": "МҮЛІКТІ САТЫП АЛУ-САТУ ШАРТЫ", "rent": "ҒИМАРАТТЫ ЖАЛДАУ ШАРТЫ", "serv": "ҚЫЗМЕТ КӨРСЕТУ ШАРТЫ", "car": "КӨЛІК ҚҰРАЛЫН САТЫП АЛУ-САТУ ШАРТЫ"}
         }
-        heading = doc.add_heading(titles[lang][doc_id], level=1)
-        heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for run in heading.runs:
-            run.font.size = Pt(16)
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        city_name = translations[lang]['city']
-        p = doc.add_paragraph()
-        p.add_run(city_name).bold = True
-        p.add_run(f"\t\t\t\t\t\t{date_str}")
+        
+        title = doc.add_paragraph()
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        set_font(title.add_run(f"{titles[lang][doc_id]}\n"), 14, True)
+        
+        header_p = doc.add_paragraph()
+        set_font(header_p.add_run(translations[lang]['city']), 12, True)
+        header_p.add_run(f"\t\t\t\t\t\t«___» ________ 20___ г./ж.")
+        
+        # Роли сторон
         roles = {
             "Русский": {"prop": ("Продавец", "Покупатель"), "rent": ("Арендодатель", "Арендатор"), "serv": ("Заказчик", "Исполнитель"), "car": ("Продавец", "Покупатель")},
             "English": {"prop": ("Seller", "Buyer"), "rent": ("Landlord", "Tenant"), "serv": ("Customer", "Contractor"), "car": ("Seller", "Buyer")},
             "Қазақша": {"prop": ("Сатушы", "Сатып алушы"), "rent": ("Жалға беруші", "Жалға алушы"), "serv": ("Тапсырыс беруші", "Орындаушы"), "car": ("Сатушы", "Сатып алушы")}
         }
         r1, r2 = roles[lang][doc_id]
-        doc.add_paragraph("")
-        p2 = doc.add_paragraph()
+        
+        p_intro = doc.add_paragraph()
+        p_intro.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        
         if lang == "Русский":
-            p2.add_run(f"{data.get('p1', '')} (далее — {r1}), с одной стороны, и {data.get('p2', '')} (далее — {r2}), с другой стороны, заключили настоящий договор о нижеследующем:")
+            set_font(p_intro.add_run(f"{data.get('p1', 'Первая сторона')}"), 12, True)
+            set_font(p_intro.add_run(f", именуемый(ое) в дальнейшем «{r1}», с одной стороны, и "), 12)
+            set_font(p_intro.add_run(f"{data.get('p2', 'Вторая сторона')}"), 12, True)
+            set_font(p_intro.add_run(f", именуемый(ое) в дальнейшем «{r2}», с другой стороны, совместно именуемые «Стороны», заключили настоящий Договор о нижеследующем:"), 12)
         elif lang == "English":
-            p2.add_run(f"{data.get('p1', '')} (hereinafter — {r1}), on the one part, and {data.get('p2', '')} (hereinafter — {r2}), on the other part, have concluded this agreement as follows:")
+            set_font(p_intro.add_run(f"{data.get('p1', 'First Party')}"), 12, True)
+            set_font(p_intro.add_run(f", hereinafter referred to as the «{r1}», on the one part, and "), 12)
+            set_font(p_intro.add_run(f"{data.get('p2', 'Second Party')}"), 12, True)
+            set_font(p_intro.add_run(f", hereinafter referred to as the «{r2}», on the other part, collectively referred to as the «Parties», have concluded this Agreement as follows:"), 12)
         else:
-            p2.add_run(f"Бір тараптан {data.get('p1', '')} (бұдан әрі — {r1}), және екінші тараптан {data.get('p2', '')} (бұдан әрі — {r2}), осы шартты жасасты:")
-        doc.add_paragraph("")
-        h2a = doc.add_heading('1. Предмет', level=2)
-        for run in h2a.runs:
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        doc.add_paragraph(data.get('d1', ''))
-        h2b = doc.add_heading('2. Условия', level=2)
-        for run in h2b.runs:
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        doc.add_paragraph(data.get('d2', ''))
-        doc.add_paragraph(data.get('d3', ''))
-        if data.get('addr'):
-            h2c = doc.add_heading('3. Реквизиты сторон', level=2)
-            for run in h2c.runs:
-                run.font.color.rgb = RGBColor(0, 0, 0)
-            doc.add_paragraph(data.get('addr', ''))
+            set_font(p_intro.add_run(f"{data.get('p1', 'Бірінші тарап')}"), 12, True)
+            set_font(p_intro.add_run(f", бұдан әрі «{r1}» деп аталады, бір тараптан, және "), 12)
+            set_font(p_intro.add_run(f"{data.get('p2', 'Екінші тарап')}"), 12, True)
+            set_font(p_intro.add_run(f", бұдан әрі «{r2}» деп аталады, екінші тараптан, бірлесіп «Тараптар» деп аталатындар, осы Шартты төмендегідей жасасты:"), 12)
 
-    doc.add_paragraph("")
-    sig = doc.add_paragraph()
-    sig.add_run("___________________ / ")
-    sig.add_run(data.get('p1', ''))
-    doc.add_paragraph("")
-    sig2 = doc.add_paragraph()
-    sig2.add_run("___________________ / ")
-    sig2.add_run(data.get('p2', ''))
+        # Конкретные условия на основе типа документа
+        if doc_id == "prop":
+            items = [
+                ("1. ПРЕДМЕТ ДОГОВОРА", f"Продавец обязуется передать в собственность Покупателя следующее имущество: {data.get('d1', '')}, а Покупатель обязуется принять имущество и уплатить за него установленную цену."),
+                ("2. ЦЕНА И ПОРЯДОК РАСЧЕТОВ", f"Стоимость отчуждаемого имущества составляет {data.get('d2', '')} тенге. Оплата производится в срок до {data.get('d3', '')}.")
+            ]
+        elif doc_id == "rent":
+            items = [
+                ("1. ПРЕДМЕТ ДОГОВОРА", f"Арендодатель предоставляет Арендатору во временное владение и пользование помещение по адресу: {data.get('d1', '')}."),
+                ("2. АРЕНДНАЯ ПЛАТА", f"Ежемесячная плата за пользование помещением составляет {data.get('d2', '')} тенге. Срок аренды: {data.get('d3', '')}.")
+            ]
+        elif doc_id == "serv":
+            items = [
+                ("1. ПРЕДМЕТ ДОГОВОРА", f"Исполнитель обязуется оказать следующие услуги: {data.get('d1', '')}, а Заказчик обязуется их оплатить."),
+                ("2. СТОИМОСТЬ И СРОКИ", f"Общая сумма договора составляет {data.get('d2', '')} тенге. Срок выполнения услуг: {data.get('d3', '')}.")
+            ]
+        else: # car
+            items = [
+                ("1. ПРЕДМЕТ ДОГОВОРА", f"Продавец продает, а Покупатель покупает транспортное средство: {data.get('d1', '')}. Гос. номер и VIN: {data.get('d3', '')}."),
+                ("2. СТОИМОСТЬ ТРАНСПОРТНОГО СРЕДСТВА", f"Цена автомобиля согласована Сторонами в размере {data.get('d2', '')} тенге.")
+            ]
 
-    buffer = BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
+        # Добавляем стандартные юридические пункты (как в ваших образцах)
+        items.append(("3. ОТВЕТСТВЕННОСТЬ СТОРОН", "За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору Стороны несут ответственность в соответствии с действующим законодательством Республики Казахстан."))
+        items.append(("4. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ", "Настоящий договор составлен в двух экземплярах, имеющих одинаковую юридическую силу, по одному для каждой из Сторон."))
 
-# ===== 5. SIDEBAR =====
-tz = pytz.timezone('Asia/Almaty')
-now = datetime.now(tz)
+        for i_title, i_text in items:
+            p_t = doc.add_paragraph()
+            set_font(p_t.add_run(f"\n{i_title}"), 12, True)
+            p_txt = doc.add_paragraph()
+            p_txt.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            set_font(p_txt.add_run(i_text), 12)
 
-with st.sidebar:
-    st.markdown("### 📝 EasyDoc AI")
-    selected_lang = st.selectbox("🌐 Язык / Language", ["Русский", "English", "Қазақша"])
-    t = translations[selected_lang]
-    st.divider()
-    st.caption(f"📅 {t['date']}: {now.strftime('%d.%m.%Y')}")
-    st.divider()
-    menu_keys = ["Главная", "Генератор", "Отзывы", "Авторы"]
-    selected_key = st.radio(
-        t["nav_title"],
-        menu_keys,
-        index=menu_keys.index(st.session_state.page),
-        format_func=lambda x: t["nav"][x]
-    )
-    st.session_state.page = selected_key
+    # 3. РЕКВИЗИТЫ И ПОДПИСИ (Всегда внизу)
+    doc.add_paragraph("\n")
+    if data.get('addr'):
+        p_addr_title = doc.add_paragraph()
+        set_font(p_addr_title.add_run("ЮРИДИЧЕСКИЕ АДРЕСА И РЕКВИЗИТЫ СТОРОН / ТАРАПТАРДЫҢ МЕКЕНЖАЙЛАРЫ МЕН ДЕРЕКТЕМЕЛЕРІ"), 12, True)
+        p_addr = doc.add_paragraph()
+        p_addr.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        set_font(p_addr.add_run(data.get('addr', '')), 11)
 
-# ===== 6. СТРАНИЦЫ =====
-if st.session_state.page == "Главная":
-    st.markdown('<div class="main-title">EasyDoc AI</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="main-sub">{t["subtitle"]}</div>', unsafe_allow_html=True)
-
-    col_l, col_m, col_r = st.columns([1, 2, 1])
-    with col_m:
-        if st.button(t["run_btn"], use_container_width=True, type="primary"):
-            nav_to("Генератор")
-
-    st.markdown("---")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown(f'''<div class="feature-card">
-            <div style="font-size:2rem">📋</div>
-            <div style="font-weight:700">{t["feat1"]}</div>
-            <div style="font-size:0.8rem; color:#94a3b8">{t["feat1_desc"]}</div>
-        </div>''', unsafe_allow_html=True)
-    with c2:
-        st.markdown(f'''<div class="feature-card">
-            <div style="font-size:2rem">🌍</div>
-            <div style="font-weight:700">{t["feat2"]}</div>
-            <div style="font-size:0.8rem; color:#94a3b8">{t["feat2_desc"]}</div>
-        </div>''', unsafe_allow_html=True)
-    with c3:
-        st.markdown(f'''<div class="feature-card">
-            <div style="font-size:2rem">⚡</div>
-            <div style="font-weight:700">{t["feat3"]}</div>
-            <div style="font-size:0.8rem; color:#94a3b8">{t["feat3_desc"]}</div>
-        </div>''', unsafe_allow_html=True)
-
-elif st.session_state.page == "Генератор":
-    st.markdown(f"## {t['gen_header']}")
-    doc_options = ["labor", "prop", "rent", "serv", "car"]
-    doc_id = st.selectbox(t["doc_type"], doc_options, format_func=lambda x: t["docs"][x])
-
-    with st.form("main_form"):
-        c1, c2 = st.columns(2)
-        org_name = c1.text_input(t["fields"][f"p1_{doc_id}"])
-        client_name = c2.text_input(t["fields"][f"p2_{doc_id}"])
-        d1 = st.text_input(t["fields"][f"d1_{doc_id}"])
-        d2 = st.text_input(t["fields"][f"d2_{doc_id}"])
-        d3 = st.text_input(t["fields"][f"d3_{doc_id}"])
-        address = st.text_area(t["address"])
-        submitted = st.form_submit_button(t["submit"], use_container_width=True)
-
-    if submitted:
-        if org_name and client_name:
-            doc_data = {"p1": org_name, "p2": client_name, "d1": d1, "d2": d2, "d3": d3, "addr": address}
-            word_buf = create_docx(doc_id, doc_data, selected_lang)
-            st.success("Документ готов!")
-            st.download_button(label=t["download"], data=word_buf, file_name=f"{doc_id}.docx", use_container_width=True)
-        else:
-            st.warning("Заполните основные поля!")
-
-elif st.session_state.page == "Отзывы":
-    st.markdown(f"## {t['feedback']}")
-    st.info("Здесь будут отображаться отзывы пользователей.")
-
-elif st.session_state.page == "Авторы":
-    st.markdown(f"## {t['authors']}")
-    st.markdown("""
-    <div style="text-align:center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 20px;">
-        <h2>Yeraly & Ramazan</h2>
-        <p>8 класс | Астана, Казахстан</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown(f'<div style="text-align:center; padding: 20px; color:#475569">EasyDoc AI © {now.year}</div>', unsafe_allow_html=True)
+    doc.add_paragraph("\n\n")
+    
+    # Делаем таблицу для красивых подписей (в две колонки)
+    table = doc.add_table(rows=1, cols=2)
+    table.autofit = True
+    
+    cell_left = table.cell(0, 0)
+    p_left = cell_left.paragraphs[0]
+    set_font(p_left.add_run(f"{data.get('p1'
