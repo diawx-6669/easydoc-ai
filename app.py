@@ -32,11 +32,11 @@ translations = {
         "nav_title": "Навигация",
         "nav": {"Главная": "Главная", "Генератор": "Генератор", "Отзывы": "Отзывы", "Авторы": "Авторы"},
         "subtitle": "Ваш надежный ИИ-помощник для малого бизнеса.",
-        "run_btn": "ЗАПУСТИТЬ ГЕНЕРАТОР",
+        "run_btn": "🚀 ЗАПУСТИТЬ ГЕНЕРАТОР",
         "date": "Дата", "time": "Время",
         "gen_header": "⚙️ Настройка шаблона", "doc_type": "Выберите тип документа:",
         "address": "Юридические адреса, контакты и банковские реквизиты сторон (IBAN, Банк, БИН/ИИН)",
-        "submit": "✨ СОЗДАТЬ ДОКУМЕНТ", "download": " СКАЧАТЬ WORD (.DOCX)",
+        "submit": "✨ СОЗДАТЬ ДОКУМЕНТ", "download": "📥 СКАЧАТЬ WORD (.DOCX)",
         "feedback": "Обратная связь", "name": "Имя", "review": "Ваш отзыв",
         "send": "Отправить", "thanks": "✅ Спасибо за отзыв!",
         "authors": "Авторы проекта", "city": "г. Астана",
@@ -69,7 +69,7 @@ translations = {
         "nav_title": "Navigation",
         "nav": {"Главная": "Home", "Генератор": "Generator", "Отзывы": "Feedback", "Авторы": "Authors"},
         "subtitle": "Your reliable AI assistant for small businesses.",
-        "run_btn": "LAUNCH GENERATOR",
+        "run_btn": "🚀 LAUNCH GENERATOR",
         "date": "Date", "time": "Time",
         "gen_header": "⚙️ Template Setup", "doc_type": "Select document type:",
         "address": "Legal addresses, contacts and bank details (IBAN, Bank)",
@@ -106,7 +106,7 @@ translations = {
         "nav_title": "Навигация",
         "nav": {"Главная": "Басты бет", "Генератор": "Генератор", "Отзывы": "Пікірлер", "Авторы": "Авторлар"},
         "subtitle": "Шағын бизнеске арналған сенімді AI көмекшісі.",
-        "run_btn": " ГЕНЕРАТОРДЫ ІСКЕ ҚОСУ",
+        "run_btn": "🚀 ГЕНЕРАТОРДЫ ІСКЕ ҚОСУ",
         "date": "Күні", "time": "Уақыты",
         "gen_header": "⚙️ Үлгіні баптау", "doc_type": "Құжат түрін таңдаңыз:",
         "address": "Заңды мекенжайлар, байланыстар және банк деректемелері (IBAN, Банк)",
@@ -235,7 +235,6 @@ st.markdown("""
 def create_docx(doc_id, data, lang):
     doc = Document()
     
-    # Настройки шрифта по умолчанию (Times New Roman, как в ваших образцах)
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
     style.font.size = Pt(12)
@@ -248,7 +247,6 @@ def create_docx(doc_id, data, lang):
         run.font.bold = bold
         run.font.color.rgb = RGBColor(0, 0, 0)
 
-    # 1. ТРУДОВОЙ ДОГОВОР (ДВУЯЗЫЧНЫЙ)
     if doc_id == "labor":
         title = doc.add_paragraph()
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -270,7 +268,6 @@ def create_docx(doc_id, data, lang):
         set_font(parties.add_run(f"{data.get('p2', 'Работник')}"), 12, True)
         set_font(parties.add_run(", именуемый(ая) в дальнейшем «Работник», заключили настоящий Трудовой договор о нижеследующем:"), 12)
         
-        # Разделы договора
         sections = [
             ("1. Шарттың мәні / Предмет договора", 
              f"Жұмыс беруші Жұмыскерді мына лауазымға қабылдайды: {data.get('d1', 'Лауазымы')}.\nРаботодатель принимает Работника на должность: {data.get('d1', 'Должность')}."),
@@ -287,7 +284,6 @@ def create_docx(doc_id, data, lang):
             p_text.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             set_font(p_text.add_run(sec_text), 12)
 
-    # 2. ОСТАЛЬНЫЕ ДОГОВОРЫ (РУССКИЙ/КАЗАХСКИЙ/АНГЛИЙСКИЙ)
     else:
         titles = {
             "Русский": {"prop": "ДОГОВОР КУПЛИ-ПРОДАЖИ ИМУЩЕСТВА", "rent": "ДОГОВОР АРЕНДЫ ПОМЕЩЕНИЯ", "serv": "ДОГОВОР ОБ ОКАЗАНИИ УСЛУГ", "car": "ДОГОВОР КУПЛИ-ПРОДАЖИ ТРАНСПОРТНОГО СРЕДСТВА"},
@@ -303,7 +299,6 @@ def create_docx(doc_id, data, lang):
         set_font(header_p.add_run(translations[lang]['city']), 12, True)
         header_p.add_run(f"\t\t\t\t\t\t«___» ________ 20___ г./ж.")
         
-        # Роли сторон
         roles = {
             "Русский": {"prop": ("Продавец", "Покупатель"), "rent": ("Арендодатель", "Арендатор"), "serv": ("Заказчик", "Исполнитель"), "car": ("Продавец", "Покупатель")},
             "English": {"prop": ("Seller", "Buyer"), "rent": ("Landlord", "Tenant"), "serv": ("Customer", "Contractor"), "car": ("Seller", "Buyer")},
@@ -330,7 +325,6 @@ def create_docx(doc_id, data, lang):
             set_font(p_intro.add_run(f"{data.get('p2', 'Екінші тарап')}"), 12, True)
             set_font(p_intro.add_run(f", бұдан әрі «{r2}» деп аталады, екінші тараптан, бірлесіп «Тараптар» деп аталатындар, осы Шартты төмендегідей жасасты:"), 12)
 
-        # Конкретные условия на основе типа документа
         if doc_id == "prop":
             items = [
                 ("1. ПРЕДМЕТ ДОГОВОРА", f"Продавец обязуется передать в собственность Покупателя следующее имущество: {data.get('d1', '')}, а Покупатель обязуется принять имущество и уплатить за него установленную цену."),
@@ -346,13 +340,12 @@ def create_docx(doc_id, data, lang):
                 ("1. ПРЕДМЕТ ДОГОВОРА", f"Исполнитель обязуется оказать следующие услуги: {data.get('d1', '')}, а Заказчик обязуется их оплатить."),
                 ("2. СТОИМОСТЬ И СРОКИ", f"Общая сумма договора составляет {data.get('d2', '')} тенге. Срок выполнения услуг: {data.get('d3', '')}.")
             ]
-        else: # car
+        else: 
             items = [
                 ("1. ПРЕДМЕТ ДОГОВОРА", f"Продавец продает, а Покупатель покупает транспортное средство: {data.get('d1', '')}. Гос. номер и VIN: {data.get('d3', '')}."),
                 ("2. СТОИМОСТЬ ТРАНСПОРТНОГО СРЕДСТВА", f"Цена автомобиля согласована Сторонами в размере {data.get('d2', '')} тенге.")
             ]
 
-        # Добавляем стандартные юридические пункты (как в ваших образцах)
         items.append(("3. ОТВЕТСТВЕННОСТЬ СТОРОН", "За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору Стороны несут ответственность в соответствии с действующим законодательством Республики Казахстан."))
         items.append(("4. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ", "Настоящий договор составлен в двух экземплярах, имеющих одинаковую юридическую силу, по одному для каждой из Сторон."))
 
@@ -363,7 +356,6 @@ def create_docx(doc_id, data, lang):
             p_txt.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             set_font(p_txt.add_run(i_text), 12)
 
-    # 3. РЕКВИЗИТЫ И ПОДПИСИ (Всегда внизу)
     doc.add_paragraph("\n")
     if data.get('addr'):
         p_addr_title = doc.add_paragraph()
@@ -374,13 +366,12 @@ def create_docx(doc_id, data, lang):
 
     doc.add_paragraph("\n\n")
     
-    # Делаем таблицу для красивых подписей (в две колонки)
     table = doc.add_table(rows=1, cols=2)
     table.autofit = True
     
     cell_left = table.cell(0, 0)
     p_left = cell_left.paragraphs[0]
-    set_font(p_left.add_run(f"{data.get('p1',  'Первая сторона')}:\n\n______________________ / (подпись)"), 12, True)
+    set_font(p_left.add_run(f"{data.get('p1', 'Первая сторона')}:\n\n______________________ / (подпись)"), 12, True)
     
     cell_right = table.cell(0, 1)
     p_right = cell_right.paragraphs[0]
@@ -462,6 +453,23 @@ elif st.session_state.page == "Генератор":
             doc_data = {"p1": org_name, "p2": client_name, "d1": d1, "d2": d2, "d3": d3, "addr": address}
             word_buf = create_docx(doc_id, doc_data, selected_lang)
             st.success("Документ готов!")
+            
+            # --- ДОБАВЛЕН БЛОК ПРЕДПРОСМОТРА ---
+            with st.expander("👀 Предпросмотр сгенерированного документа", expanded=True):
+                st.markdown(f"<h4 style='text-align:center; color:#e2e8f0;'>{t['docs'][doc_id]}</h4>", unsafe_allow_html=True)
+                st.markdown(f"<div style='text-align:right; font-size:0.9rem; color:#94a3b8;'>Дата: {now.strftime('%d.%m.%Y')}</div>", unsafe_allow_html=True)
+                st.markdown("---")
+                st.markdown(f"**Сторона 1:** {org_name}")
+                st.markdown(f"**Сторона 2:** {client_name}")
+                st.markdown(f"**Предмет договора:** {d1}")
+                st.markdown(f"**Условия и Оплата:** {d2}")
+                st.markdown(f"**Сроки:** {d3}")
+                if address:
+                    st.markdown(f"**Реквизиты:**\n{address}")
+                st.markdown("---")
+                st.caption("*Это краткая выжимка ваших данных. Полный юридический текст со всеми статьями и местом для подписей находится в итоговом файле Word.*")
+            # -----------------------------------
+            
             st.download_button(label=t["download"], data=word_buf, file_name=f"{doc_id}.docx", use_container_width=True)
         else:
             st.warning("Заполните основные поля (названия сторон)!")
@@ -469,7 +477,6 @@ elif st.session_state.page == "Генератор":
 elif st.session_state.page == "Отзывы":
     st.markdown(f"## {t['feedback']}")
     
-    # Форма для отправки отзыва
     with st.form("feedback_form"):
         u_name = st.text_input(t["name"])
         u_review = st.text_area(t["review"])
@@ -477,7 +484,6 @@ elif st.session_state.page == "Отзывы":
         
         if f_submit:
             if u_name and u_review:
-                # Добавляем отзыв в начало списка
                 st.session_state.feedbacks.insert(0, {
                     "name": u_name,
                     "text": u_review,
@@ -489,7 +495,6 @@ elif st.session_state.page == "Отзывы":
 
     st.divider()
     
-    # Отображение отзывов
     st.markdown("### Последние отзывы:")
     for f in st.session_state.feedbacks:
         st.markdown(f"""
