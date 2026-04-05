@@ -380,4 +380,133 @@ def create_docx(doc_id, data, lang):
     
     cell_left = table.cell(0, 0)
     p_left = cell_left.paragraphs[0]
-    set_font(p_left.add_run(f"{data.get('p1'
+    set_font(p_left.add_run(f"{data.get('p1',  'Первая сторона')}:\n\n______________________ / (подпись)"), 12, True)
+    
+    cell_right = table.cell(0, 1)
+    p_right = cell_right.paragraphs[0]
+    set_font(p_right.add_run(f"{data.get('p2', 'Вторая сторона')}:\n\n______________________ / (подпись)"), 12, True)
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+# ===== 5. SIDEBAR =====
+tz = pytz.timezone('Asia/Almaty')
+now = datetime.now(tz)
+
+with st.sidebar:
+    st.markdown("### 📝 EasyDoc AI")
+    selected_lang = st.selectbox("🌐 Язык / Language", ["Русский", "English", "Қазақша"])
+    t = translations[selected_lang]
+    st.divider()
+    st.caption(f"📅 {t['date']}: {now.strftime('%d.%m.%Y')}")
+    st.divider()
+    menu_keys = ["Главная", "Генератор", "Отзывы", "Авторы"]
+    selected_key = st.radio(
+        t["nav_title"],
+        menu_keys,
+        index=menu_keys.index(st.session_state.page),
+        format_func=lambda x: t["nav"][x]
+    )
+    st.session_state.page = selected_key
+
+# ===== 6. СТРАНИЦЫ =====
+if st.session_state.page == "Главная":
+    st.markdown('<div class="main-title">EasyDoc AI</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="main-sub">{t["subtitle"]}</div>', unsafe_allow_html=True)
+
+    col_l, col_m, col_r = st.columns([1, 2, 1])
+    with col_m:
+        if st.button(t["run_btn"], use_container_width=True, type="primary"):
+            nav_to("Генератор")
+
+    st.markdown("---")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown(f'''<div class="feature-card">
+            <div style="font-size:2rem">📋</div>
+            <div style="font-weight:700">{t["feat1"]}</div>
+            <div style="font-size:0.8rem; color:#94a3b8">{t["feat1_desc"]}</div>
+        </div>''', unsafe_allow_html=True)
+    with c2:
+        st.markdown(f'''<div class="feature-card">
+            <div style="font-size:2rem">🌍</div>
+            <div style="font-weight:700">{t["feat2"]}</div>
+            <div style="font-size:0.8rem; color:#94a3b8">{t["feat2_desc"]}</div>
+        </div>''', unsafe_allow_html=True)
+    with c3:
+        st.markdown(f'''<div class="feature-card">
+            <div style="font-size:2rem">⚡</div>
+            <div style="font-weight:700">{t["feat3"]}</div>
+            <div style="font-size:0.8rem; color:#94a3b8">{t["feat3_desc"]}</div>
+        </div>''', unsafe_allow_html=True)
+
+elif st.session_state.page == "Генератор":
+    st.markdown(f"## {t['gen_header']}")
+    doc_options = ["labor", "prop", "rent", "serv", "car"]
+    doc_id = st.selectbox(t["doc_type"], doc_options, format_func=lambda x: t["docs"][x])
+
+    with st.form("main_form"):
+        c1, c2 = st.columns(2)
+        org_name = c1.text_input(t["fields"][f"p1_{doc_id}"])
+        client_name = c2.text_input(t["fields"][f"p2_{doc_id}"])
+        d1 = st.text_input(t["fields"][f"d1_{doc_id}"])
+        d2 = st.text_input(t["fields"][f"d2_{doc_id}"])
+        d3 = st.text_input(t["fields"][f"d3_{doc_id}"])
+        address = st.text_area(t["address"])
+        submitted = st.form_submit_button(t["submit"], use_container_width=True)
+
+    if submitted:
+        if org_name and client_name:
+            doc_data = {"p1": org_name, "p2": client_name, "d1": d1, "d2": d2, "d3": d3, "addr": address}
+            word_buf = create_docx(doc_id, doc_data, selected_lang)
+            st.success("Документ готов!")
+            st.download_button(label=t["download"], data=word_buf, file_name=f"{doc_id}.docx", use_container_width=True)
+        else:
+            st.warning("Заполните основные поля (названия сторон)!")
+
+elif st.session_state.page == "Отзывы":
+    st.markdown(f"## {t['feedback']}")
+    
+    # Форма для отправки отзыва
+    with st.form("feedback_form"):
+        u_name = st.text_input(t["name"])
+        u_review = st.text_area(t["review"])
+        f_submit = st.form_submit_button(t["send"])
+        
+        if f_submit:
+            if u_name and u_review:
+                # Добавляем отзыв в начало списка
+                st.session_state.feedbacks.insert(0, {
+                    "name": u_name,
+                    "text": u_review,
+                    "date": now.strftime('%d.%m.%Y')
+                })
+                st.success(t["thanks"])
+            else:
+                st.warning("Пожалуйста, заполните оба поля!")
+
+    st.divider()
+    
+    # Отображение отзывов
+    st.markdown("### Последние отзывы:")
+    for f in st.session_state.feedbacks:
+        st.markdown(f"""
+        <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(99, 102, 241, 0.1);">
+            <div style="font-weight: 600; color: #8b5cf6;">{f['name']} <span style="font-size: 0.8rem; color: #64748b;">({f['date']})</span></div>
+            <div style="color: #e2e8f0; margin-top: 5px;">{f['text']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif st.session_state.page == "Авторы":
+    st.markdown(f"## {t['authors']}")
+    st.markdown("""
+    <div style="text-align:center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(99, 102, 241, 0.1);">
+        <h2 style="color: #8b5cf6;">Yeraly & Ramazan</h2>
+        <p style="font-size: 1.2rem; color: #94a3b8;">8 класс | Астана, Казахстан</p>
+        <p style="color: #64748b;">Проект разработан для автоматизации рутинных процессов малого бизнеса с помощью искусственного интеллекта.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown(f'<div style="text-align:center; padding: 20px; color:#475569">EasyDoc AI ©️ {now.year}</div>', unsafe_allow_html=True)
